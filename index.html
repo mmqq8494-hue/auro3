@@ -1,13 +1,319 @@
-<!doctype html>
-<html lang="en">
-  <head>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>AURO | الفخامة الهادئة</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root { --gold: #C5A059; --dark: #0d0d0d; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Cairo', sans-serif; background-color: var(--dark); color: white; margin: 0; -webkit-tap-highlight-color: transparent; }
+
+        /* الخلفية السينمائية */
+        #slideshow {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background-size: cover; background-position: center;
+            filter: blur(15px) brightness(0.2);
+            transition: background-image 2s ease-in-out;
+            transform: scale(1.1);
+        }
+
+        /* الأيقونة العلوية (منعمة) */
+        .site-icon-top {
+            position: fixed; top: 15px; right: 15px; z-index: 101; width: 45px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(197, 160, 89, 0.3);
+            filter: drop-shadow(0 0 5px var(--gold));
+        }
+        @media (min-width: 768px) { .site-icon-top { top: 25px; right: 40px; width: 55px; } }
+
+        /* شريط التنقل المركزي - متجاوب */
+        .nav-center {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 100; background: rgba(255,255,255,0.05); backdrop-filter: blur(20px);
+            padding: 10px 15px; border-radius: 100px; border: 1px solid rgba(197, 160, 89, 0.2);
+            display: flex; gap: 12px; font-size: 0.65rem; width: fit-content; max-width: 90%;
+        }
+        @media (min-width: 768px) { .nav-center { top: 30px; padding: 12px 40px; gap: 30px; font-size: 0.85rem; } }
+        .nav-center a { color: #ccc; transition: 0.4s; }
+        .nav-center a:hover { color: var(--gold); text-shadow: 0 0 10px var(--gold); }
+
+        /* تصميم الأقسام */
+        section { 
+            min-height: 100vh; width: 100%; 
+            display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; 
+            padding: 100px 20px 40px; position: relative;
+        }
+
+        .gold-card { 
+            background: rgba(26, 26, 26, 0.5); border: 1px solid rgba(197, 160, 89, 0.15); 
+            backdrop-filter: blur(25px); border-radius: 2.5rem; transition: 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            width: 100%;
+        }
+        @media (min-width: 768px) { .gold-card { border-radius: 3.5rem; } }
+        
+        .gold-card:hover { 
+            border-color: var(--gold); 
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(197, 160, 89, 0.15);
+        }
+
+        .logo-main {
+            width: 200px; border-radius: 40px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+        @media (min-width: 768px) { .logo-main { width: 280px; } }
+
+        .btn-luxury {
+            background: var(--gold); color: #000; font-weight: 700;
+            padding: 1.1rem 3rem; border-radius: 100px; transition: 0.5s;
+            box-shadow: 0 10px 30px rgba(197, 160, 89, 0.2);
+            width: 100%; max-width: 280px; text-align: center;
+        }
+
+        .choice-item { 
+            border: 1px solid rgba(197, 160, 89, 0.2); border-radius: 18px; padding: 1.2rem; 
+            cursor: pointer; transition: 0.3s; background: rgba(0,0,0,0.4); text-align: center;
+            font-size: 0.9rem;
+        }
+        .choice-item:hover { border-color: var(--gold); }
+        .choice-item.active { background: var(--gold); color: black; font-weight: bold; box-shadow: 0 0 20px var(--gold); }
+
+        .glass-input { 
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(197, 160, 89, 0.2); 
+            border-radius: 15px; padding: 1.1rem; outline: none; width: 100%; color: white;
+            font-size: 16px;
+        }
+
+        /* المعرض متجاوب */
+        .gallery-grid img { 
+            height: 45vh; width: 100%; object-fit: cover; border-radius: 25px; 
+            opacity: 0.8; transition: 0.8s;
+        }
+        @media (min-width: 768px) { .gallery-grid img { height: 65vh; opacity: 0.7; } }
+        .gallery-grid img:hover { opacity: 1; transform: scale(1.02); }
+
+        /* قنوات التواصل */
+        .social-link {
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.9rem; border: 1px solid rgba(197, 160, 89, 0.15);
+            padding: 14px 25px; border-radius: 100px; transition: 0.4s;
+            display: flex; align-items: center; justify-content: center; min-width: 140px;
+            background: rgba(255,255,255,0.02);
+        }
+        .social-link:hover { background: var(--gold); color: black; font-weight: bold; transform: translateY(-3px); }
+    </style>
+</head>
+<body>
+
+    <!-- الخلفية السينمائية -->
+    <div id="slideshow"></div>
+
+    <!-- الأيقونة العلوية يمين -->
+    <img src="favicon.png" class="site-icon-top" alt="AURO Icon">
+
+    <!-- شريط التنقل المركزي -->
+    <div class="nav-center">
+        <a href="#welcome">الرئيسية</a>
+        <a href="#packages">الباقات</a>
+        <a href="#gallery">المعرض</a>
+        <a href="#preview-3d">المعاينة</a>
+        <a href="#contact">التواصل</a>
+    </div>
+
+    <div class="main-container">
+        
+        <!-- قسم الترحيب -->
+        <section id="welcome">
+            <img src="logo.png" class="logo-main mb-8" alt="AURO Logo">
+            <h1 class="text-xl md:text-3xl font-light mb-12 tracking-widest text-gray-300 text-center px-6 leading-relaxed">
+                لحظاتك الرائعة.. تستحق كوباً بفخامة الذهب
+            </h1>
+            <a href="#packages" class="btn-luxury">ابدأ رحلتك</a>
+        </section>
+
+        <!-- قسم الباقات -->
+        <section id="packages">
+            <div class="max-w-6xl w-full text-center px-4">
+                <h2 class="text-3xl md:text-5xl font-bold mb-16 text-gold" style="color: var(--gold);">باقات AURO</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="gold-card p-10 md:p-14 cursor-pointer" onclick="selectPackage('الذهبية', 20, 1)">
+                        <h3 class="text-2xl font-bold mb-6">الذهبية</h3>
+                        <p class="text-5xl font-light mb-4">20 <span class="text-lg">كوب</span></p>
+                        <p class="text-xs text-gray-500 tracking-widest mt-4">مثالية للمناسبات الخاصة والجمعات</p>
+                    </div>
+                    <div class="gold-card p-10 md:p-14 cursor-pointer border-[#C5A059] relative" onclick="selectPackage('البلاتينية', 40, 2)">
+                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#C5A059] text-black text-[9px] px-4 py-1 rounded-full font-bold uppercase">الأكثر طلباً</div>
+                        <h3 class="text-2xl font-bold mb-6 text-gold" style="color: var(--gold);">البلاتينية</h3>
+                        <p class="text-5xl font-light mb-4">40 <span class="text-lg">كوب</span></p>
+                        <p class="text-xs text-gray-500 tracking-widest mt-4">للمناسبات الأنيقة والمتوسطة</p>
+                    </div>
+                    <div class="gold-card p-10 md:p-14 cursor-pointer" onclick="selectPackage('الملكية', 60, 3)">
+                        <h3 class="text-2xl font-bold mb-6">الملكية</h3>
+                        <p class="text-5xl font-light mb-4">60 <span class="text-lg">كوب</span></p>
+                        <p class="text-xs text-gray-500 tracking-widest mt-4">لحفلاتكم الكبرى والمناسبات الرسمية</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- قسم المشروبات -->
+        <section id="drinks" style="display: none;">
+            <div class="max-w-4xl w-full text-center px-4">
+                <h2 class="text-3xl md:text-4xl font-bold mb-8 text-gold" style="color: var(--gold);">تخصيص المذاق</h2>
+                <p id="drink-limit-info" class="text-sm text-gray-400 mb-12 tracking-wide"></p>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-5">
+                    <div class="choice-item" onclick="toggleDrink(this, 'قهوة اليوم')">قهوة اليوم</div>
+                    <div class="choice-item" onclick="toggleDrink(this, 'قهوة سعودية')">قهوة سعودية</div>
+                    <div class="choice-item" onclick="toggleDrink(this, 'كرك')">كرك</div>
+                    <div class="choice-item" onclick="toggleDrink(this, 'كركديه')">كركديه</div>
+                    <div class="choice-item" onclick="toggleDrink(this, 'هوت تشوكليت')">هوت تشوكليت</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- قسم الفورم -->
+        <section id="form-section">
+            <div class="max-w-2xl w-full gold-card p-10 md:p-16">
+                <h2 class="text-2xl md:text-3xl font-bold mb-10 text-center" style="color: var(--gold);">تأكيد الحجز</h2>
+                <form id="auroForm" class="space-y-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="text" id="name" placeholder="الاسم" required class="glass-input text-right">
+                        <input type="tel" id="phone" placeholder="الجوال" required class="glass-input text-right">
+                    </div>
+                    <select id="city" required class="glass-input text-right appearance-none cursor-pointer">
+                        <option value="">المدينة</option>
+                        <option value="الدمام">الدمام</option><option value="الخبر">الخبر</option><option value="الظهران">الظهران</option>
+                    </select>
+                    <input type="text" id="event" placeholder="نوع المناسبة" required class="glass-input text-right">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="text-right">
+                            <label class="text-[10px] text-gray-500 mr-2">التاريخ</label>
+                            <input type="date" id="date" required class="glass-input">
+                        </div>
+                        <div class="text-right">
+                            <label class="text-[10px] text-gray-500 mr-2">الوقت</label>
+                            <input type="time" id="time" required class="glass-input">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full btn-luxury text-lg mt-8 uppercase tracking-widest">تأكيد الطلب الآن</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- قسم المعرض -->
+        <section id="gallery">
+            <h2 class="text-3xl md:text-5xl font-bold mb-16 text-gold text-center" style="color: var(--gold);">معرض AURO</h2>
+            <div class="gallery-grid grid grid-cols-1 md:grid-cols-4 gap-6 px-4 w-full max-w-7xl">
+                <img src="bg1.png" alt="1">
+                <img src="bg2.png" alt="2">
+                <img src="bg3.png" alt="3">
+                <img src="bg4.png" alt="4">
+            </div>
+        </section>
+
+        <!-- قسم المعاينة -->
+        <section id="preview-3d">
+            <div class="gold-card p-12 md:p-24 max-w-4xl text-center border-dashed border-gold/30 mx-4">
+                <h2 class="text-3xl md:text-4xl font-bold mb-8">الواقع المعزز (AR)</h2>
+                <p class="text-gray-400 text-lg md:text-xl leading-relaxed tracking-widest font-light px-4">
+                    نحن نؤمن بأن التجربة تبدأ قبل الطلب.<br>
+                    قريباً ستتمكن من معاينة ركن AURO في منزلك عبر هاتفك مباشرة.
+                </p>
+                <div class="mt-12 text-gold tracking-[0.5em] text-xs animate-pulse uppercase">COMING SOON</div>
+            </div>
+        </section>
+
+        <!-- قسم التواصل -->
+        <section id="contact">
+            <h2 class="text-3xl md:text-5xl font-bold mb-16 text-center" style="color: var(--gold);">تواصل معنا</h2>
+            <div class="flex flex-wrap justify-center gap-4 px-6 w-full max-w-4xl">
+                <a href="https://wa.me/966579383960" target="_blank" class="social-link">واتساب</a>
+                <a href="https://instagram.com/Auro.ksa" target="_blank" class="social-link">إنستقرام</a>
+                <a href="https://tiktok.com/@auro.ksa" target="_blank" class="social-link">تيك توك</a>
+                <a href="https://x.com/auroksa" target="_blank" class="social-link">X (تويتر)</a>
+                <a href="mailto:auro.ksa@gmail.com" class="social-link">البريد الإلكتروني</a>
+            </div>
+            <p class="mt-24 text-gray-600 text-[10px] tracking-[0.5em] uppercase text-center">AURO | Quiet Luxury Experience | 2026</p>
+        </section>
+    </div>
+
+    <script>
+        // نظام السلايد شو للخلفية
+        const images = ["bg1.png", "bg2.png", "bg3.png", "bg4.png"];
+        let curr = 0;
+        const bgElement = document.getElementById('slideshow');
+        
+        function updateBg() {
+            bgElement.style.backgroundImage = `url('${images[curr]}')`;
+            curr = (curr + 1) % images.length;
+        }
+        setInterval(updateBg, 6000);
+        updateBg();
+
+        // منطق الباقات والمشروبات
+        let booking = { package: "", limit: 0, drinks: [] };
+
+        function selectPackage(p, cups, l) {
+            booking.package = p; booking.limit = l; booking.drinks = [];
+            document.querySelectorAll('.choice-item').forEach(i => i.classList.remove('active'));
+            document.getElementById('drink-limit-info').innerText = `تم اختيار باقة ${p}. يرجى اختيار ${l} مشروبات:`;
+            document.getElementById('drinks').style.display = 'flex';
+            
+            // التمرير السلس للقسم التالي
+            document.getElementById('drinks').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function toggleDrink(el, name) {
+            if (el.classList.contains('active')) {
+                el.classList.remove('active');
+                booking.drinks = booking.drinks.filter(d => d !== name);
+            } else if (booking.drinks.length < booking.limit) {
+                el.classList.add('active');
+                booking.drinks.push(name);
+                // الانتقال التلقائي عند اكتمال الاختيارات
+                if (booking.drinks.length === booking.limit) {
+                    setTimeout(() => {
+                        document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
+                    }, 800);
+                }
+            }
+        }
+
+        // إرسال الطلب (Discord & WhatsApp)
+        document.getElementById('auroForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('name').value, phone: document.getElementById('phone').value,
+                city: document.getElementById('city').value, date: document.getElementById('date').value,
+                time: document.getElementById('time').value, event: document.getElementById('event').value
+            };
+            const webhook = "https://discord.com/api/webhooks/1466534582286291117/aVV9y5qUHQ3eCAi9hC52bfTNC4csvz-1mPJ7D_IVcJtYZIphv94GJOZBRs2ZvtuOt3BG";
+            
+            try {
+                await fetch(webhook, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ embeds: [{
+                        title: "🛎️ طلب حجز AURO جديد", color: 12951641,
+                        fields: [
+                            { name: "👤 العميل", value: data.name, inline: true }, { name: "📱 الجوال", value: data.phone, inline: true },
+                            { name: "📦 الباقة", value: booking.package, inline: true }, { name: "☕ المشروبات", value: booking.drinks.join(' + ') },
+                            { name: "📍 المدينة", value: data.city, inline: true }, { name: "📅 الموعد", value: `${data.date} | ${data.time}` }
+                        ],
+                        timestamp: new Date()
+                    }]})
+                });
+            } catch(e) {}
+
+            const wa = `أهلاً AURO ✨%0A%0Aطلب حجز جديد:%0A👤 الاسم: ${data.name}%0A📱 الجوال: ${data.phone}%0A📦 الباقة: ${booking.package}%0A☕ المشروبات: ${booking.drinks.join(' + ')}%0A📍 المدينة: ${data.city}%0A🎉 المناسبة: ${data.event}%0A📅 التاريخ: ${data.date}%0A⏰ الوقت: ${data.time}`;
+            window.open(`https://wa.me/966579383960?text=${wa}`, '_blank');
+        };
+    </script>
+</body>
 </html>
