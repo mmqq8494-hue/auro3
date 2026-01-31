@@ -14,16 +14,23 @@
         html { scroll-behavior: smooth; }
         body { font-family: 'Cairo', sans-serif; background-color: var(--dark); color: white; margin: 0; -webkit-tap-highlight-color: transparent; }
 
-        /* الخلفية السينمائية */
+        /* الخلفية السينمائية المحدثة */
         #slideshow {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
-            background-size: cover; background-position: center;
-            filter: blur(15px) brightness(0.2);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-size: cover;
+            background-position: center;
+            filter: blur(15px) brightness(0.2); /* الضبابية والسطوع لضمان فخامة النص */
             transition: background-image 2s ease-in-out;
-            transform: scale(1.1);
+            transform: scale(1.1); /* لمنع ظهور الحواف عند الـ Blur */
+            background-repeat: no-repeat;
         }
 
-        /* الأيقونة العلوية (منعمة) */
+        /* الأيقونة العلوية يمين */
         .site-icon-top {
             position: fixed; top: 15px; right: 15px; z-index: 101; width: 45px;
             border-radius: 12px;
@@ -32,7 +39,7 @@
         }
         @media (min-width: 768px) { .site-icon-top { top: 25px; right: 40px; width: 55px; } }
 
-        /* شريط التنقل المركزي - متجاوب */
+        /* شريط التنقل المركزي */
         .nav-center {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
             z-index: 100; background: rgba(255,255,255,0.05); backdrop-filter: blur(20px);
@@ -43,7 +50,7 @@
         .nav-center a { color: #ccc; transition: 0.4s; }
         .nav-center a:hover { color: var(--gold); text-shadow: 0 0 10px var(--gold); }
 
-        /* تصميم الأقسام */
+        /* الأقسام */
         section { 
             min-height: 100vh; width: 100%; 
             display: flex; flex-direction: column; 
@@ -91,7 +98,7 @@
             font-size: 16px;
         }
 
-        /* المعرض متجاوب */
+        /* المعرض */
         .gallery-grid img { 
             height: 45vh; width: 100%; object-fit: cover; border-radius: 25px; 
             opacity: 0.8; transition: 0.8s;
@@ -112,7 +119,7 @@
 </head>
 <body>
 
-    <!-- الخلفية السينمائية -->
+    <!-- الخلفية السينمائية (عرض الشرائح) -->
     <div id="slideshow"></div>
 
     <!-- الأيقونة العلوية يمين -->
@@ -245,17 +252,20 @@
     </div>
 
     <script>
-        // نظام السلايد شو للخلفية
+        // نظام السلايد شو للخلفية (تأكد من وجود الصور في مجلدك بنفس الأسماء)
         const images = ["bg1.png", "bg2.png", "bg3.png", "bg4.png"];
         let curr = 0;
         const bgElement = document.getElementById('slideshow');
         
         function updateBg() {
+            // إضافة رابط الصورة مع مراعاة دقة المسار
             bgElement.style.backgroundImage = `url('${images[curr]}')`;
             curr = (curr + 1) % images.length;
         }
-        setInterval(updateBg, 6000);
+
+        // تشغيل أول صورة فوراً ثم البدء بالمؤقت
         updateBg();
+        setInterval(updateBg, 6000); // تغيير الصورة كل 6 ثوانٍ
 
         // منطق الباقات والمشروبات
         let booking = { package: "", limit: 0, drinks: [] };
