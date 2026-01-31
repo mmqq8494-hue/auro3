@@ -39,7 +39,7 @@
         }
         @media (min-width: 768px) { .site-icon-top { top: 25px; right: 40px; width: 55px; } }
 
-        /* شريط التنقل المركزي */
+        /* شريط التنقل المركزي - متجاوب */
         .nav-center {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
             z-index: 100; background: rgba(255,255,255,0.05); backdrop-filter: blur(20px);
@@ -50,7 +50,7 @@
         .nav-center a { color: #ccc; transition: 0.4s; }
         .nav-center a:hover { color: var(--gold); text-shadow: 0 0 10px var(--gold); }
 
-        /* الأقسام */
+        /* تصميم الأقسام */
         section { 
             min-height: 100vh; width: 100%; 
             display: flex; flex-direction: column; 
@@ -98,7 +98,7 @@
             font-size: 16px;
         }
 
-        /* المعرض */
+        /* المعرض متجاوب */
         .gallery-grid img { 
             height: 45vh; width: 100%; object-fit: cover; border-radius: 25px; 
             opacity: 0.8; transition: 0.8s;
@@ -142,7 +142,7 @@
             <h1 class="text-xl md:text-3xl font-light mb-12 tracking-widest text-gray-300 text-center px-6 leading-relaxed">
                 لحظاتك الرائعة.. تستحق كوباً بفخامة الذهب
             </h1>
-            <a href="#packages" class="btn-luxury">ابدأ رحلتك</a>
+            <a href="#packages" class="btn-luxury mx-auto block">ابدأ رحلتك</a>
         </section>
 
         <!-- قسم الباقات -->
@@ -209,7 +209,8 @@
                             <input type="time" id="time" required class="glass-input">
                         </div>
                     </div>
-                    <button type="submit" class="w-full btn-luxury text-lg mt-8 uppercase tracking-widest">تأكيد الطلب الآن</button>
+                    <!-- تم تعديل الزر ليكون في المنتصف تماماً باستخدام mx-auto block -->
+                    <button type="submit" class="w-full btn-luxury text-lg mt-8 mx-auto block uppercase tracking-widest">تأكيد الطلب الآن</button>
                 </form>
             </div>
         </section>
@@ -252,20 +253,18 @@
     </div>
 
     <script>
-        // نظام السلايد شو للخلفية (تأكد من وجود الصور في مجلدك بنفس الأسماء)
+        // نظام السلايد شو للخلفية
         const images = ["bg1.png", "bg2.png", "bg3.png", "bg4.png"];
         let curr = 0;
         const bgElement = document.getElementById('slideshow');
         
         function updateBg() {
-            // إضافة رابط الصورة مع مراعاة دقة المسار
             bgElement.style.backgroundImage = `url('${images[curr]}')`;
             curr = (curr + 1) % images.length;
         }
 
-        // تشغيل أول صورة فوراً ثم البدء بالمؤقت
         updateBg();
-        setInterval(updateBg, 6000); // تغيير الصورة كل 6 ثوانٍ
+        setInterval(updateBg, 6000);
 
         // منطق الباقات والمشروبات
         let booking = { package: "", limit: 0, drinks: [] };
@@ -275,8 +274,6 @@
             document.querySelectorAll('.choice-item').forEach(i => i.classList.remove('active'));
             document.getElementById('drink-limit-info').innerText = `تم اختيار باقة ${p}. يرجى اختيار ${l} مشروبات:`;
             document.getElementById('drinks').style.display = 'flex';
-            
-            // التمرير السلس للقسم التالي
             document.getElementById('drinks').scrollIntoView({ behavior: 'smooth' });
         }
 
@@ -287,7 +284,6 @@
             } else if (booking.drinks.length < booking.limit) {
                 el.classList.add('active');
                 booking.drinks.push(name);
-                // الانتقال التلقائي عند اكتمال الاختيارات
                 if (booking.drinks.length === booking.limit) {
                     setTimeout(() => {
                         document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
@@ -296,7 +292,6 @@
             }
         }
 
-        // إرسال الطلب (Discord & WhatsApp)
         document.getElementById('auroForm').onsubmit = async function(e) {
             e.preventDefault();
             const data = {
