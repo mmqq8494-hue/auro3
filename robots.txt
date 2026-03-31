@@ -1,3 +1,0 @@
-User-agent: *
-Allow: /
-Sitemap: https://auro-ksa.com/sitemap.xml
