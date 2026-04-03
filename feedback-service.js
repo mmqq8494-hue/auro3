@@ -1,13 +1,90 @@
 /**
- * AURO Feedback System — Data Service v2.0
+ * AURO Feedback System â€” Data Service v3.0 (Firebase Cloud Backend)
  * Full visitor intelligence: IP geolocation, referrer, UTM, device, browser.
  */
+
+window.AURO_FIREBASE_LOADED = false;
+window.AURO_DB = null;
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDhHpjbjXKOGRuCiB07iuvrIofdHoTf6fw",
+  authDomain: "auro-ksa.firebaseapp.com",
+  projectId: "auro-ksa",
+  storageBucket: "auro-ksa.firebasestorage.app",
+  messagingSenderId: "225910999374",
+  appId: "1:225910999374:web:f9253cf9e1b42c9bccf61f",
+  measurementId: "G-H1MTNSJ80G"
+};
+
 const FeedbackService = {
 
   // ── INIT ──────────────────────────────────────────────────
   init() {
     if (!localStorage.getItem('auro_reviews'))  localStorage.setItem('auro_reviews',  JSON.stringify([]));
     if (!localStorage.getItem('auro_visitors')) localStorage.setItem('auro_visitors', JSON.stringify([]));
+
+    // Load Firebase if not loaded yet
+    if (!document.getElementById('firebase-app-script')) {
+      const s1 = document.createElement('script');
+      s1.id = 'firebase-app-script';
+      s1.src = 'https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js';
+      document.head.appendChild(s1);
+
+      s1.onload = () => {
+        const s2 = document.createElement('script');
+        s2.src = 'https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js';
+        document.head.appendChild(s2);
+        s2.onload = () => {
+          firebase.initializeApp(firebaseConfig);
+          window.AURO_DB = firebase.firestore();
+          window.AURO_FIREBASE_LOADED = true;
+          this._setupListeners();
+        };
+      };
+    } else if (window.AURO_FIREBASE_LOADED) {
+      this._setupListeners();
+    }
+  },
+
+  _setupListeners() {
+    if (!window.AURO_DB) return;
+    const db = window.AURO_DB;
+    const isAdmin = !!document.getElementById('admin-main') || window.location.href.includes('admin');
+
+    if (isAdmin) {
+      // ADMIN: Listen to EVERYTHING
+      db.collection('reviews').onSnapshot(snap => {
+        const dbReviews = [];
+        snap.forEach(doc => dbReviews.push({ id: doc.id, ...doc.data() }));
+        localStorage.setItem('auro_reviews', JSON.stringify(dbReviews));
+        if (window.loadAll) window.loadAll();
+      });
+
+      db.collection('visitors').onSnapshot(snap => {
+        const dbVisitors = [];
+        snap.forEach(doc => dbVisitors.push({ id: doc.id, ...doc.data() }));
+        localStorage.setItem('auro_visitors', JSON.stringify(dbVisitors));
+        if (window.loadAll) window.loadAll();
+      });
+    } else {
+      // PUBLIC USER: Listen ONLY to approved reviews for the slider
+      db.collection('reviews').where('status', '==', 'approved').onSnapshot(snap => {
+        const dbReviews = [];
+        snap.forEach(doc => dbReviews.push({ id: doc.id, ...doc.data() }));
+        localStorage.setItem('auro_reviews', JSON.stringify(dbReviews));
+        if (window.loadReviewsTicker) window.loadReviewsTicker();
+      });
+    }
+  },
+
+  _retryPush(col, docId, data) {
+    // Retry pushing to Firebase if it hasn't loaded yet
+    const iv = setInterval(() => {
+      if (window.AURO_DB) {
+        window.AURO_DB.collection(col).doc(docId).set(data, { merge: true });
+        clearInterval(iv);
+      }
+    }, 1000);
   },
 
   // ── DEVICE & BROWSER DETECTION ────────────────────────────
@@ -60,7 +137,6 @@ const FeedbackService = {
     const ref = document.referrer || '';
     const params = new URLSearchParams(window.location.search);
 
-    // UTM parameters (from your WhatsApp/Instagram links etc.)
     const utm = {
       source:   params.get('utm_source')   || null,
       medium:   params.get('utm_medium')   || null,
@@ -68,7 +144,6 @@ const FeedbackService = {
       content:  params.get('utm_content')  || null,
     };
 
-    // Parse referrer into a friendly source name
     let refLabel = 'مباشر';
     if (ref) {
       try {
@@ -87,7 +162,6 @@ const FeedbackService = {
       }
     }
 
-    // utm_source overrides parsed referrer if present
     if (utm.source) refLabel = utm.source;
 
     return { referrer: ref, referrerLabel: refLabel, utm };
@@ -119,7 +193,6 @@ const FeedbackService = {
       }
     } catch(e) { /* silent fail */ }
 
-    const visitors  = JSON.parse(localStorage.getItem('auro_visitors') || '[]');
     const sessionId = sessionStorage.getItem('auro_session_id') || ('sess_' + Date.now());
     sessionStorage.setItem('auro_session_id', sessionId);
 
@@ -128,68 +201,56 @@ const FeedbackService = {
     const hardwareInfo = this._getHardwareInfo();
     const locLabel    = `${loc.city}، ${loc.country}`;
 
-    let existing = visitors.find(v => v.sessionId === sessionId);
-    if (existing) {
-      // Update mutable fields on revisit
-      existing.lastPage   = pageName;
-      existing.lastActive = new Date().toISOString();
-      if (scrollDepth > (existing.maxScroll || 0)) existing.maxScroll = scrollDepth;
-      // Track all pages visited in order
-      if (!existing.pagesVisited) existing.pagesVisited = [];
-      if (!existing.pagesVisited.includes(pageName)) existing.pagesVisited.push(pageName);
-    } else {
-      visitors.push({
-        sessionId,
-        // Location
-        location:    locLabel,
-        city:        loc.city,
-        country:     loc.country,
-        region:      loc.region || '—',
-        ip:          loc.ip,
-        timezone:    loc.timezone,
-        isp:         loc.isp || '—',
-        // Traffic source
-        referrer:     trafficSrc.referrer,
-        referrerLabel:trafficSrc.referrerLabel,
-        utm:          trafficSrc.utm,
-        // Device
-        device:   deviceInfo.device,
-        browser:  deviceInfo.browser,
-        os:       deviceInfo.os,
-        // Hardware & Environment
-        screenRes:      hardwareInfo.screenRes,
-        screenDepth:    hardwareInfo.screenDepth,
-        pixelRatio:     hardwareInfo.pixelRatio,
-        windowSize:     hardwareInfo.windowSize,
-        cpuCores:       hardwareInfo.cpuCores,
-        ramGB:          hardwareInfo.ramGB,
-        language:       hardwareInfo.language,
-        darkMode:       hardwareInfo.darkMode,
-        connectionType: hardwareInfo.connectionType,
-        online:         hardwareInfo.online,
-        // Session
-        firstVisit:    new Date().toISOString(),
-        lastActive:    new Date().toISOString(),
-        lastPage:      pageName,
-        pagesVisited: [pageName],
-        maxScroll:     scrollDepth,
+    const baseData = {
+      sessionId,
+      location:    locLabel,
+      city:        loc.city,
+      country:     loc.country,
+      region:      loc.region || '—',
+      ip:          loc.ip,
+      timezone:    loc.timezone,
+      isp:         loc.isp || '—',
+      referrer:     trafficSrc.referrer,
+      referrerLabel:trafficSrc.referrerLabel,
+      utm:          trafficSrc.utm,
+      device:   deviceInfo.device,
+      browser:  deviceInfo.browser,
+      os:       deviceInfo.os,
+      screenRes:      hardwareInfo.screenRes,
+      screenDepth:    hardwareInfo.screenDepth,
+      pixelRatio:     hardwareInfo.pixelRatio,
+      windowSize:     hardwareInfo.windowSize,
+      cpuCores:       hardwareInfo.cpuCores,
+      ramGB:          hardwareInfo.ramGB,
+      language:       hardwareInfo.language,
+      darkMode:       hardwareInfo.darkMode,
+      connectionType: hardwareInfo.connectionType,
+      online:         hardwareInfo.online,
+    };
+
+    if (window.AURO_DB) {
+      const docRef = window.AURO_DB.collection('visitors').doc(sessionId);
+      docRef.get().then(doc => {
+        let current = doc.exists ? doc.data() : { firstVisit: new Date().toISOString(), pagesVisited: [], maxScroll: 0 };
+        current.lastPage = pageName;
+        current.lastActive = new Date().toISOString();
+        if (scrollDepth > (current.maxScroll || 0)) current.maxScroll = scrollDepth;
+        if (!current.pagesVisited.includes(pageName)) current.pagesVisited.push(pageName);
+        
+        docRef.set({ ...baseData, ...current }, { merge: true });
       });
+    } else {
+      // Retry if Firebase is not ready
+      const tempId = sessionId;
+      const current = { firstVisit: new Date().toISOString(), pagesVisited: [pageName], maxScroll: scrollDepth, lastPage: pageName, lastActive: new Date().toISOString() };
+      this._retryPush('visitors', tempId, { ...baseData, ...current });
     }
 
-    // Prune visitors older than 60 days
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 60);
-    const cleaned = visitors.filter(v => new Date(v.lastActive) > cutoff);
-    localStorage.setItem('auro_visitors', JSON.stringify(cleaned));
     return locLabel;
   },
 
   // ── REVIEWS CRUD ──────────────────────────────────────────
   async addReview(reviewData) {
-    const reviews = JSON.parse(localStorage.getItem('auro_reviews') || '[]');
-    await new Promise(r => setTimeout(r, 700));
-
-    // Attach visitor geo to the review automatically
     let geo = null;
     try { geo = JSON.parse(sessionStorage.getItem('auro_geo')); } catch(e) {}
 
@@ -205,8 +266,12 @@ const FeedbackService = {
       referrer: this._getTrafficSource().referrerLabel,
     };
 
-    reviews.push(newReview);
-    localStorage.setItem('auro_reviews', JSON.stringify(reviews));
+    if (window.AURO_DB) {
+      await window.AURO_DB.collection('reviews').doc(newReview.id).set(newReview);
+    } else {
+      this._retryPush('reviews', newReview.id, newReview);
+    }
+
     return newReview;
   },
 
@@ -217,16 +282,17 @@ const FeedbackService = {
   },
 
   updateReviewStatus(id, newStatus) {
-    const reviews = JSON.parse(localStorage.getItem('auro_reviews') || '[]');
-    const i = reviews.findIndex(r => r.id === id);
-    if (i !== -1) { reviews[i].status = newStatus; localStorage.setItem('auro_reviews', JSON.stringify(reviews)); return true; }
+    if (window.AURO_DB) {
+      window.AURO_DB.collection('reviews').doc(id).update({ status: newStatus });
+      return true;
+    }
     return false;
   },
 
   deleteReview(id) {
-    let reviews = JSON.parse(localStorage.getItem('auro_reviews') || '[]');
-    reviews = reviews.filter(r => r.id !== id);
-    localStorage.setItem('auro_reviews', JSON.stringify(reviews));
+    if (window.AURO_DB) {
+      window.AURO_DB.collection('reviews').doc(id).delete();
+    }
   },
 
   // ── STATS ─────────────────────────────────────────────────
@@ -236,21 +302,17 @@ const FeedbackService = {
 
     const cut24h  = new Date(now - 24 * 3600 * 1000);
     const cut7d   = new Date(now - 7  * 24 * 3600 * 1000);
-    const cut30d  = new Date(now - 30 * 24 * 3600 * 1000);
 
     const recent24h = visitors.filter(v => new Date(v.lastActive) > cut24h);
     const recent7d  = visitors.filter(v => new Date(v.lastActive) > cut7d);
 
-    // Average scroll
     const avgScroll = visitors.length
       ? Math.round(visitors.reduce((a, v) => a + (v.maxScroll || 0), 0) / visitors.length)
       : 0;
 
-    // Devices breakdown
     const devices = { mobile: 0, desktop: 0, tablet: 0 };
     visitors.forEach(v => { if (devices[v.device] !== undefined) devices[v.device]++; });
 
-    // Top referrers
     const refMap = {};
     visitors.forEach(v => {
       const r = v.referrerLabel || 'مباشر';
@@ -261,7 +323,6 @@ const FeedbackService = {
       .slice(0, 6)
       .map(([label, count]) => ({ label, count }));
 
-    // Top cities
     const cityMap = {};
     visitors.forEach(v => {
       const c = v.city && v.city !== '—' ? v.city : 'غير معروف';
