@@ -895,11 +895,19 @@
     }
 
     // ── SETTINGS ──────────────────────────────────────────────
-    function confirmClear(type) {
+    async function confirmClear(type) {
       const msg = type === 'visitors'
         ? 'سيتم حذف كل سجلات الزوار نهائياً. هل أنت متأكد؟'
         : 'سيتم حذف كل التقييمات نهائياً. هل أنت متأكد؟';
       if (!confirm(msg)) return;
+
+      if (window.AURO_DB) {
+         try {
+           const snap = await window.AURO_DB.collection(type).get();
+           snap.forEach(doc => { doc.ref.delete() });
+         } catch(e) {}
+      }
+
       if (type === 'visitors') localStorage.setItem('auro_visitors', JSON.stringify([]));
       if (type === 'reviews')  localStorage.setItem('auro_reviews',  JSON.stringify([]));
       showToast('🗑 تم الحذف بنجاح');
