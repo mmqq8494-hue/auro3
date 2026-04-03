@@ -47,7 +47,9 @@ const FeedbackService = {
   },
 
   _setupListeners() {
-    if (!window.AURO_DB) return;
+    if (!window.AURO_DB || this._listenersAttached) return;
+    this._listenersAttached = true;
+    
     const db = window.AURO_DB;
     const isAdmin = !!document.getElementById('admin-main') || window.location.href.includes('admin');
 
