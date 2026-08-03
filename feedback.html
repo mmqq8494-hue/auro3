@@ -52,22 +52,24 @@
       transform: scale(1.25);
     }
 
-    /* Rating pill row */
-    .rating-pills {
-      display: flex; flex-wrap: wrap; gap: 8px;
-      justify-content: center; margin-top: 18px;
+    /* Step icon badge */
+    .step-icon {
+      width: 56px; height: 56px; margin: 0 auto 18px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(197,160,89,0.15), rgba(197,160,89,0.04));
+      border: 1.5px solid var(--glass-border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem;
+      box-shadow: 0 0 24px rgba(197,160,89,0.12);
     }
-    .rating-pill {
-      padding: 7px 16px; border-radius: 30px; font-size: 0.8rem;
-      border: 1px solid var(--glass-border); cursor: pointer;
-      color: var(--text-muted); background: transparent;
-      font-family: 'Tajawal', sans-serif;
-      transition: all 0.25s;
+
+    .field-err {
+      font-size: 0.78rem; color: var(--danger); margin-top: 6px;
+      min-height: 1.2em; text-align: right; display: none;
     }
-    .rating-pill:hover, .rating-pill.selected {
-      background: rgba(197,160,89,0.1);
-      border-color: var(--gold); color: var(--gold);
-    }
+    .input-wrap.has-err textarea,
+    .input-wrap.has-err input { border-color: var(--danger); }
+    .input-wrap.has-err .field-err { display: block; }
 
     /* Textarea char ring */
     .char-ring {
@@ -379,10 +381,56 @@
       </div>
     </div>
 
-    <!-- ── STEP 1: Star Rating ── -->
+    <!-- ── STEP 1: Name ── -->
     <div id="step-1" class="step active">
       <div class="step-card">
-        <span class="step-label">١ من ٤ · التقييم العام</span>
+        <div class="step-icon">👤</div>
+        <span class="step-label">١ من ٤ · بمن نتشرف؟</span>
+        <h2>لنبدأ <span class="g">باسمك</span></h2>
+        <p class="muted">اسمك يمنح تقييمك مصداقية أكبر، وسيظهر مع تقييمك عند نشره</p>
+
+        <!-- Live Name Preview -->
+        <div class="name-preview" id="name-preview">
+          <div class="name-avatar" id="name-avatar">؟</div>
+          <div>
+            <strong id="name-display">عميل مميز</strong>
+            <p>سيظهر اسمك هكذا في الموقع</p>
+          </div>
+        </div>
+
+        <div class="input-wrap" id="name-wrap">
+          <label for="name-input">الاسم الكريم</label>
+          <input type="text" id="name-input" placeholder="مثال: أحمد أ." maxlength="40" oninput="handleNameInput()" onblur="validateNameBlur()">
+          <p class="field-err" id="name-err">اكتب اسمك للمتابعة</p>
+        </div>
+
+        <button class="btn-next" id="btn-step1" onclick="goStep(2)" disabled>التالي →</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 2: Phone ── -->
+    <div id="step-2" class="step">
+      <div class="step-card">
+        <div class="step-icon">📱</div>
+        <span class="step-label">٢ من ٤ · تواصل موثوق</span>
+        <h2>رقم <span class="g">جوالك</span></h2>
+        <p class="muted">نستخدمه للتأكد من صحة التقييم فقط، ولن يظهر لأي شخص آخر</p>
+
+        <div class="input-wrap" id="phone-wrap">
+          <label for="phone-input">رقم الجوال</label>
+          <input type="tel" id="phone-input" placeholder="05xxxxxxxx" maxlength="14" inputmode="numeric" oninput="handlePhoneInput()" onblur="validatePhoneBlur()">
+          <p class="field-err" id="phone-err">تأكد من كتابة رقم جوال سعودي صحيح</p>
+        </div>
+
+        <button class="btn-next" id="btn-step2" onclick="goStep(3)" disabled>التالي →</button>
+      </div>
+    </div>
+
+    <!-- ── STEP 3: Star Rating ── -->
+    <div id="step-3" class="step">
+      <div class="step-card">
+        <div class="step-icon">⭐</div>
+        <span class="step-label">٣ من ٤ · التقييم العام</span>
         <h2>كيف كانت <span class="g">تجربتك</span> مع أورو؟</h2>
         <p class="muted">اختر عدد النجوم الذي تراه مناسباً</p>
 
@@ -396,39 +444,17 @@
 
         <p class="rating-desc" id="rating-desc" style="margin-top:14px;min-height:1.6em;"></p>
 
-        <button class="btn-next" id="btn-step1" onclick="goStep(2)" disabled>التالي →</button>
+        <button class="btn-next" id="btn-step3" onclick="goStep(4)" disabled>التالي →</button>
       </div>
     </div>
 
-    <!-- ── STEP 2: Aspect Ratings ── -->
-    <div id="step-2" class="step">
+    <!-- ── STEP 4: Comment ── -->
+    <div id="step-4" class="step">
       <div class="step-card">
-        <span class="step-label">٢ من ٤ · التفاصيل</span>
-        <h2>ما الذي <span class="g">برز</span> في تجربتك؟</h2>
-        <p class="muted">اختر ما ينطبق عليك (اختياري)</p>
-
-        <div class="rating-pills" id="aspect-pills">
-          <button class="rating-pill" data-asp="جودة القهوة">☕ جودة القهوة</button>
-          <button class="rating-pill" data-asp="الديكور والأناقة">✨ الديكور والأناقة</button>
-          <button class="rating-pill" data-asp="سرعة الخدمة">⚡ سرعة الخدمة</button>
-          <button class="rating-pill" data-asp="تعامل الفريق">🤝 تعامل الفريق</button>
-          <button class="rating-pill" data-asp="التنوع في المشروبات">🎯 التنوع في المشروبات</button>
-          <button class="rating-pill" data-asp="القيمة مقابل السعر">💎 القيمة مقابل السعر</button>
-          <button class="rating-pill" data-asp="الالتزام بالمواعيد">⏰ الالتزام بالمواعيد</button>
-          <button class="rating-pill" data-asp="التجهيز والتقديم">🎨 التجهيز والتقديم</button>
-        </div>
-
-        <button class="btn-next" onclick="goStep(3)" style="margin-top:24px">التالي →</button>
-        <button class="btn-skip" onclick="goStep(3)">تخطي</button>
-      </div>
-    </div>
-
-    <!-- ── STEP 3: Comment ── -->
-    <div id="step-3" class="step">
-      <div class="step-card">
-        <span class="step-label">٣ من ٤ · رأيك بكلماتك</span>
+        <div class="step-icon">💬</div>
+        <span class="step-label">٤ من ٤ · رأيك بكلماتك</span>
         <h2>أخبرنا <span class="g">بتفاصيل</span> أكثر</h2>
-        <p class="muted">كل كلمة تكتبها تصنع فرقاً حقيقياً</p>
+        <p class="muted">اختياري — كل كلمة تكتبها تصنع فرقاً حقيقياً</p>
 
         <div class="input-wrap">
           <label for="comment-input">تجربتك</label>
@@ -444,36 +470,6 @@
               stroke-dasharray="69" stroke-dashoffset="69"/>
           </svg>
           <span class="char-text"><span id="char-num">0</span>/400</span>
-        </div>
-
-        <button class="btn-next" onclick="goStep(4)">التالي →</button>
-        <button class="btn-skip" onclick="goStep(4)">تخطي</button>
-      </div>
-    </div>
-
-    <!-- ── STEP 4: Name ── -->
-    <div id="step-4" class="step">
-      <div class="step-card">
-        <span class="step-label">٤ من ٤ · بمن نتشرف؟</span>
-        <h2>آخر خطوة <span class="g">✦</span></h2>
-        <p class="muted">اسمك الكريم اختياري — سيظهر مع تقييمك عند نشره</p>
-
-        <!-- Live Name Preview -->
-        <div class="name-preview" id="name-preview">
-          <div class="name-avatar" id="name-avatar">؟</div>
-          <div>
-            <strong id="name-display">عميل مميز</strong>
-            <p>سيظهر اسمك هكذا في الموقع</p>
-          </div>
-        </div>
-
-        <div class="input-wrap">
-          <label for="name-input">الاسم (اختياري)</label>
-          <input type="text" id="name-input" placeholder="مثال: أحمد أ." maxlength="40" oninput="previewName()">
-        </div>
-
-        <div class="tap-hint">
-          <span>🔒</span> لن يتم نشر تقييمك إلا بعد مراجعتنا
         </div>
 
         <button class="btn-next" id="submit-btn" onclick="submitFeedback()">
@@ -530,6 +526,8 @@
 
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
   <script src="feedback-service.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script>
@@ -537,7 +535,7 @@
     emailjs.init('D6YuxIpW4rJwgy1oG');
     // ── STATE ─────────────────────────────────────────────────
     let selectedRating  = 0;
-    let selectedAspects = [];
+    let validPhone      = '';
 
     const ratingData = {
       1: { text: '😟 نأسف لذلك، سنبذل قصارى جهدنا للتحسين' },
@@ -570,29 +568,48 @@
         selectedRating = parseInt(star.dataset.value);
         paintStars(selectedRating);
         ratingDesc.textContent = ratingData[selectedRating].text;
-        document.getElementById('btn-step1').disabled = false;
+        document.getElementById('btn-step3').disabled = false;
       });
     });
 
-    // ── ASPECT PILLS ──────────────────────────────────────────
-    document.querySelectorAll('.rating-pill').forEach(pill => {
-      pill.addEventListener('click', () => {
-        const asp = pill.dataset.asp;
-        pill.classList.toggle('selected');
-        if (pill.classList.contains('selected')) {
-          if (!selectedAspects.includes(asp)) selectedAspects.push(asp);
-        } else {
-          selectedAspects = selectedAspects.filter(a => a !== asp);
-        }
-      });
-    });
-
-    // ── NAME PREVIEW ──────────────────────────────────────────
-    function previewName() {
-      const val = document.getElementById('name-input').value.trim();
+    // ── NAME (STEP 1) ─────────────────────────────────────────
+    function handleNameInput() {
+      const wrap = document.getElementById('name-wrap');
+      const val  = document.getElementById('name-input').value.trim();
       const display = val || 'عميل مميز';
       document.getElementById('name-display').textContent = display;
       document.getElementById('name-avatar').textContent  = val ? val.charAt(0) : '✦';
+      wrap.classList.remove('has-err');
+      document.getElementById('btn-step1').disabled = val.length < 2;
+    }
+    function validateNameBlur() {
+      const wrap = document.getElementById('name-wrap');
+      const val  = document.getElementById('name-input').value.trim();
+      wrap.classList.toggle('has-err', val.length > 0 && val.length < 2);
+    }
+
+    // ── PHONE (STEP 2) ────────────────────────────────────────
+    function normalizeSaudiPhone(raw) {
+      let v = raw.replace(/[\s-]/g, '');
+      if (v.startsWith('+966')) v = '0' + v.slice(4);
+      else if (v.startsWith('966')) v = '0' + v.slice(3);
+      else if (/^5\d{8}$/.test(v)) v = '0' + v;
+      return v;
+    }
+
+    function handlePhoneInput() {
+      const wrap  = document.getElementById('phone-wrap');
+      const input = document.getElementById('phone-input');
+      const norm  = normalizeSaudiPhone(input.value.trim());
+      const ok    = /^05\d{8}$/.test(norm);
+      wrap.classList.remove('has-err');
+      validPhone = ok ? norm : '';
+      document.getElementById('btn-step2').disabled = !ok;
+    }
+    function validatePhoneBlur() {
+      const wrap = document.getElementById('phone-wrap');
+      const val  = document.getElementById('phone-input').value.trim();
+      wrap.classList.toggle('has-err', val.length > 0 && !validPhone);
     }
 
     // ── CHAR COUNTER ──────────────────────────────────────────
@@ -643,16 +660,17 @@
 
       const name    = document.getElementById('name-input').value.trim();
       const comment = document.getElementById('comment-input').value.trim();
-      const aspects = selectedAspects.length ? selectedAspects.join('، ') : '';
-      const fullComment = aspects
-        ? (comment ? comment + '\n\nأبرز ما أعجبني: ' + aspects : 'أبرز ما أعجبني: ' + aspects)
-        : comment;
 
-      const review = await FeedbackService.addReview({
-        name:    name || 'عميل مميز',
-        rating:  selectedRating,
-        comment: fullComment,
-      });
+      try {
+        await FeedbackService.addReview({
+          name:    name || 'عميل مميز',
+          phone:   validPhone,
+          rating:  selectedRating,
+          comment: comment,
+        });
+      } catch (err) {
+        console.error('Firebase Error:', err);
+      }
 
       // ── 1. EMAIL to auro.ksa@gmail.com ────────────────────
       const stars = '★'.repeat(selectedRating) + '☆'.repeat(5 - selectedRating);
@@ -663,11 +681,31 @@
         title:   `⭐ تقييم جديد على AURO (${selectedRating}/5)`,
         name:    name || 'عميل مميز',
         email:   'auro.ksa@gmail.com',
-        message: `النجوم: ${stars}\nالتعليق: ${fullComment || '— لم يُكتب تعليق —'}\nالموقع: ${geo ? geo.city + '، ' + geo.country : '—'}\nالجهاز: ${/Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'موبايل 📱' : 'كمبيوتر 💻'}\n\n🔗 مراجعة التقييم: admin.html`,
+        message: `الجوال: ${validPhone || '—'}\nالنجوم: ${stars}\nالتعليق: ${comment || '— لم يُكتب تعليق —'}\nالموقع: ${geo ? geo.city + '، ' + geo.country : '—'}\nالجهاز: ${/Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'موبايل 📱' : 'كمبيوتر 💻'}\n\n🔗 مراجعة التقييم: admin.html`,
+      }).catch(() => {});
+
+      // ── DISCORD WEBHOOK ──────────────────────────────────────
+      const discordPayload = {
+        embeds: [{
+          title: "⭐ تقييم جديد على AURO",
+          color: selectedRating >= 4 ? 0x00ff00 : (selectedRating === 3 ? 0xffff00 : 0xff0000),
+          fields: [
+            { name: "الاسم", value: name || "عميل مميز", inline: true },
+            { name: "الجوال", value: validPhone || "—", inline: true },
+            { name: "التقييم", value: selectedRating + "/5 " + stars, inline: true },
+            { name: "التعليق", value: comment || "—", inline: false }
+          ],
+          timestamp: new Date().toISOString()
+        }]
+      };
+      fetch("https://discord.com/api/webhooks/1507053229563842674/SOR6LrKOOLi_4LR8T36K-4x1wGPr0hoD6lqcQ5Rt0ibY6yzaJHY-NwYwKfInw4e1jlTT", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(discordPayload)
       }).catch(() => {});
 
       goStep(5);
-      buildCard(name || 'عميل مميز', selectedRating, fullComment);
+      buildCard(name || 'عميل مميز', selectedRating, comment);
     }
 
     // ── GOLDEN CARD ───────────────────────────────────────────────

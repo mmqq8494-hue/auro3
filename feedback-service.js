@@ -1,20 +1,7 @@
 /**
- * AURO Feedback System â€” Data Service v3.0 (Firebase Cloud Backend)
+ * AURO Feedback System — Data Service v4.0 (Supabase Backend)
  * Full visitor intelligence: IP geolocation, referrer, UTM, device, browser.
  */
-
-window.AURO_FIREBASE_LOADED = false;
-window.AURO_DB = null;
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDhHpjbjXKOGRuCiB07iuvrIofdHoTf6fw",
-  authDomain: "auro-ksa.firebaseapp.com",
-  projectId: "auro-ksa",
-  storageBucket: "auro-ksa.firebasestorage.app",
-  messagingSenderId: "225910999374",
-  appId: "1:225910999374:web:f9253cf9e1b42c9bccf61f",
-  measurementId: "G-H1MTNSJ80G"
-};
 
 const FeedbackService = {
 
@@ -22,71 +9,35 @@ const FeedbackService = {
   init() {
     if (!localStorage.getItem('auro_reviews'))  localStorage.setItem('auro_reviews',  JSON.stringify([]));
     if (!localStorage.getItem('auro_visitors')) localStorage.setItem('auro_visitors', JSON.stringify([]));
-
-    // Load Firebase if not loaded yet
-    if (!document.getElementById('firebase-app-script')) {
-      const s1 = document.createElement('script');
-      s1.id = 'firebase-app-script';
-      s1.src = 'https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js';
-      document.head.appendChild(s1);
-
-      s1.onload = () => {
-        const s2 = document.createElement('script');
-        s2.src = 'https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js';
-        document.head.appendChild(s2);
-        s2.onload = () => {
-          firebase.initializeApp(firebaseConfig);
-          window.AURO_DB = firebase.firestore();
-          window.AURO_FIREBASE_LOADED = true;
-          this._setupListeners();
-        };
-      };
-    } else if (window.AURO_FIREBASE_LOADED) {
-      this._setupListeners();
-    }
+    this._refreshCache();
   },
 
-  _setupListeners() {
-    if (!window.AURO_DB || this._listenersAttached) return;
-    this._listenersAttached = true;
-    
-    const db = window.AURO_DB;
+  async _refreshCache() {
+    if (!window.sb) return;
     const isAdmin = !!document.getElementById('admin-main') || window.location.href.includes('admin');
 
-    if (isAdmin) {
-      // ADMIN: Listen to EVERYTHING
-      db.collection('reviews').onSnapshot(snap => {
-        const dbReviews = [];
-        snap.forEach(doc => dbReviews.push({ id: doc.id, ...doc.data() }));
-        localStorage.setItem('auro_reviews', JSON.stringify(dbReviews));
-        if (window.loadAll) window.loadAll();
-      });
-
-      db.collection('visitors').onSnapshot(snap => {
-        const dbVisitors = [];
-        snap.forEach(doc => dbVisitors.push({ id: doc.id, ...doc.data() }));
-        localStorage.setItem('auro_visitors', JSON.stringify(dbVisitors));
-        if (window.loadAll) window.loadAll();
-      });
-    } else {
-      // PUBLIC USER: Listen ONLY to approved reviews for the slider
-      db.collection('reviews').where('status', '==', 'approved').onSnapshot(snap => {
-        const dbReviews = [];
-        snap.forEach(doc => dbReviews.push({ id: doc.id, ...doc.data() }));
-        localStorage.setItem('auro_reviews', JSON.stringify(dbReviews));
-        if (window.loadReviewsTicker) window.loadReviewsTicker();
-      });
+    try {
+      let query = window.sb.from('reviews').select('*').order('date', { ascending: false });
+      if (!isAdmin) query = query.eq('status', 'approved');
+      const { data, error } = await query;
+      if (error) throw error;
+      localStorage.setItem('auro_reviews', JSON.stringify((data || []).map(window.snakeToCamel)));
+    } catch (e) {
+      console.error('AURO: reviews fetch error', e);
     }
-  },
 
-  _retryPush(col, docId, data) {
-    // Retry pushing to Firebase if it hasn't loaded yet
-    const iv = setInterval(() => {
-      if (window.AURO_DB) {
-        window.AURO_DB.collection(col).doc(docId).set(data, { merge: true });
-        clearInterval(iv);
+    if (isAdmin) {
+      try {
+        const { data, error } = await window.sb.from('visitors').select('*').order('last_active', { ascending: false });
+        if (error) throw error;
+        localStorage.setItem('auro_visitors', JSON.stringify((data || []).map(window.snakeToCamel)));
+      } catch (e) {
+        console.error('AURO: visitors fetch error', e);
       }
-    }, 1000);
+    }
+
+    if (window.loadAll) window.loadAll();
+    if (window.loadReviewsTicker) window.loadReviewsTicker();
   },
 
   // ── DEVICE & BROWSER DETECTION ────────────────────────────
@@ -198,12 +149,13 @@ const FeedbackService = {
     const sessionId = sessionStorage.getItem('auro_session_id') || ('sess_' + Date.now());
     sessionStorage.setItem('auro_session_id', sessionId);
 
-    const deviceInfo  = this._getDeviceInfo();
-    const trafficSrc  = this._getTrafficSource();
+    const deviceInfo   = this._getDeviceInfo();
+    const trafficSrc   = this._getTrafficSource();
     const hardwareInfo = this._getHardwareInfo();
-    const locLabel    = `${loc.city}، ${loc.country}`;
+    const locLabel     = `${loc.city}، ${loc.country}`;
 
     const baseData = {
+      id: sessionId,
       sessionId,
       location:    locLabel,
       city:        loc.city,
@@ -212,9 +164,9 @@ const FeedbackService = {
       ip:          loc.ip,
       timezone:    loc.timezone,
       isp:         loc.isp || '—',
-      referrer:     trafficSrc.referrer,
-      referrerLabel:trafficSrc.referrerLabel,
-      utm:          trafficSrc.utm,
+      referrer:      trafficSrc.referrer,
+      referrerLabel: trafficSrc.referrerLabel,
+      utm:           trafficSrc.utm,
       device:   deviceInfo.device,
       browser:  deviceInfo.browser,
       os:       deviceInfo.os,
@@ -230,22 +182,22 @@ const FeedbackService = {
       online:         hardwareInfo.online,
     };
 
-    if (window.AURO_DB) {
-      const docRef = window.AURO_DB.collection('visitors').doc(sessionId);
-      docRef.get().then(doc => {
-        let current = doc.exists ? doc.data() : { firstVisit: new Date().toISOString(), pagesVisited: [], maxScroll: 0 };
-        current.lastPage = pageName;
-        current.lastActive = new Date().toISOString();
-        if (scrollDepth > (current.maxScroll || 0)) current.maxScroll = scrollDepth;
-        if (!current.pagesVisited.includes(pageName)) current.pagesVisited.push(pageName);
-        
-        docRef.set({ ...baseData, ...current }, { merge: true });
-      });
-    } else {
-      // Retry if Firebase is not ready
-      const tempId = sessionId;
-      const current = { firstVisit: new Date().toISOString(), pagesVisited: [pageName], maxScroll: scrollDepth, lastPage: pageName, lastActive: new Date().toISOString() };
-      this._retryPush('visitors', tempId, { ...baseData, ...current });
+    if (!window.sb) return locLabel;
+
+    try {
+      const row = {
+        ...baseData,
+        id: sessionId,
+        firstVisit: new Date().toISOString(),
+        lastActive: new Date().toISOString(),
+        lastPage: pageName,
+        maxScroll: scrollDepth,
+        pagesVisited: [pageName],
+      };
+      const { error } = await window.sb.rpc('upsert_visitor', { row_data: window.camelToSnake(row) });
+      if (error) throw error;
+    } catch (e) {
+      console.error('AURO: logVisitor error', e);
     }
 
     return locLabel;
@@ -261,6 +213,7 @@ const FeedbackService = {
       date:     new Date().toISOString(),
       status:   'pending',
       name:     reviewData.name    || 'عميل مميز',
+      phone:    reviewData.phone   || '',
       rating:   reviewData.rating,
       comment:  reviewData.comment || '',
       location: geo ? `${geo.city}، ${geo.country}` : '—',
@@ -268,10 +221,9 @@ const FeedbackService = {
       referrer: this._getTrafficSource().referrerLabel,
     };
 
-    if (window.AURO_DB) {
-      await window.AURO_DB.collection('reviews').doc(newReview.id).set(newReview);
-    } else {
-      this._retryPush('reviews', newReview.id, newReview);
+    if (window.sb) {
+      const { error } = await window.sb.rpc('insert_review', { row_data: window.camelToSnake(newReview) });
+      if (error) console.error('AURO: addReview error', error);
     }
 
     return newReview;
@@ -283,18 +235,19 @@ const FeedbackService = {
     return filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
   },
 
-  updateReviewStatus(id, newStatus) {
-    if (window.AURO_DB) {
-      window.AURO_DB.collection('reviews').doc(id).update({ status: newStatus });
-      return true;
-    }
-    return false;
+  async updateReviewStatus(id, newStatus) {
+    if (!window.sb) return false;
+    const { error } = await window.sb.from('reviews').update({ status: newStatus }).eq('id', id);
+    if (error) { console.error('AURO: updateReviewStatus error', error); return false; }
+    await this._refreshCache();
+    return true;
   },
 
-  deleteReview(id) {
-    if (window.AURO_DB) {
-      window.AURO_DB.collection('reviews').doc(id).delete();
-    }
+  async deleteReview(id) {
+    if (!window.sb) return;
+    const { error } = await window.sb.from('reviews').delete().eq('id', id);
+    if (error) console.error('AURO: deleteReview error', error);
+    await this._refreshCache();
   },
 
   // ── STATS ─────────────────────────────────────────────────
@@ -361,7 +314,7 @@ const FeedbackService = {
       (v.maxScroll || 0) + '%',
     ]);
     const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href = url; a.download = `auro_visitors_${Date.now()}.csv`; a.click();
@@ -376,7 +329,7 @@ const FeedbackService = {
       r.name, r.rating, r.comment, r.status, r.location || '—', r.device || '—', r.referrer || '—',
     ]);
     const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href = url; a.download = `auro_reviews_${Date.now()}.csv`; a.click();

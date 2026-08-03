@@ -1,7 +1,7 @@
-// â”€â”€ AURO MAIN PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── AURO MAIN PAGE ───────────────────────────────────────────
 'use strict';
 
-// â”€â”€ PRELOADER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── PRELOADER ─────────────────────────────────────────────────
 if (!sessionStorage.getItem('auro_preloaded')) {
     window.addEventListener('load', () => {
         setTimeout(() => {
@@ -15,22 +15,96 @@ if (!sessionStorage.getItem('auro_preloaded')) {
     if (p) p.style.display = 'none';
 }
 
-// â”€â”€ MAIN BACKGROUND â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const bgEl = document.getElementById('bg-slideshow');
-if (bgEl) bgEl.style.backgroundImage = "url('AUROwebsitebg.png')";
+// ── AMBIENT GOLD PARTICLES ─────────────────────────────────────
+(function() {
+    const canvas = document.getElementById('bg-particles');
+    if (!canvas) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-// â”€â”€ NAV â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let raf = null;
+    const isMobile = window.innerWidth < 768;
+    const COUNT = isMobile ? 22 : 45;
+    const COLORS = ['rgba(197,160,89,', 'rgba(232,201,122,'];
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    function makeParticle(randomY) {
+        return {
+            x: Math.random() * canvas.width,
+            y: randomY ? Math.random() * canvas.height : canvas.height + 10,
+            r: 1 + Math.random() * 2.2,
+            speed: 0.15 + Math.random() * 0.35,
+            drift: Math.random() * 0.6 - 0.3,
+            phase: Math.random() * Math.PI * 2,
+            alpha: 0.15 + Math.random() * 0.45,
+            color: COLORS[Math.floor(Math.random() * COLORS.length)]
+        };
+    }
+
+    function init() {
+        resize();
+        particles = Array.from({ length: COUNT }, () => makeParticle(true));
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+            p.y -= p.speed;
+            p.phase += 0.01;
+            p.x += Math.sin(p.phase) * p.drift * 0.3;
+            if (p.y < -10) Object.assign(p, makeParticle(false));
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = p.color + p.alpha + ')';
+            ctx.fill();
+        });
+        raf = requestAnimationFrame(draw);
+    }
+
+    function stop() { if (raf) { cancelAnimationFrame(raf); raf = null; } }
+    function start() { if (!raf) draw(); }
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) stop(); else start();
+    });
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(resize, 200);
+    });
+
+    init();
+    start();
+})();
+
+// ── NAV ──────────────────────────────────────────────────────
 const nav = document.getElementById('mainNav');
 const hamburger = document.getElementById('hamburger');
 const mobileNav = document.getElementById('mobileNav');
 
-window.addEventListener('scroll', () => {
+function updateNavScroll() {
     nav.classList.toggle('scrolled', window.scrollY > 60);
     highlightNav();
-});
+}
 
-function toggleMenu() { hamburger.classList.toggle('open'); mobileNav.classList.toggle('open'); }
-function closeMenu() { hamburger.classList.remove('open'); mobileNav.classList.remove('open'); }
+function toggleMenu() {
+    const isOpen = hamburger.classList.toggle('open');
+    mobileNav.classList.toggle('open', isOpen);
+    hamburger.setAttribute('aria-expanded', String(isOpen));
+    hamburger.setAttribute('aria-label', isOpen ? 'إغلاق القائمة' : 'فتح القائمة');
+}
+function closeMenu() {
+    hamburger.classList.remove('open');
+    mobileNav.classList.remove('open');
+    hamburger.setAttribute('aria-expanded', 'false');
+    hamburger.setAttribute('aria-label', 'فتح القائمة');
+}
 
 // close mobile menu on outside click
 mobileNav.addEventListener('click', e => { if (e.target === mobileNav) closeMenu(); });
@@ -56,13 +130,13 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
     });
 });
 
-// â”€â”€ REVEAL ANIMATIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── REVEAL ANIMATIONS ────────────────────────────────────────
 const revealObs = new IntersectionObserver((entries) => {
     entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
 }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
 
-// â”€â”€ HOW IT WORKS ANIMATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── HOW IT WORKS ANIMATION ───────────────────────────────────
 const hiwLine = document.getElementById('hiw-line');
 if (hiwLine) {
     const hiwObs = new IntersectionObserver((entries) => {
@@ -71,7 +145,7 @@ if (hiwLine) {
     hiwObs.observe(hiwLine);
 }
 
-// â”€â”€ PARTICLES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── PARTICLES ────────────────────────────────────────────────
 function spawnParticles(x, y, count = 6) {
     for (let i = 0; i < count; i++) {
         setTimeout(() => {
@@ -93,20 +167,20 @@ document.addEventListener('click', e => {
     if (e.target.closest('.btn-primary,.btn-outline,.pkg-card,.social-btn')) spawnParticles(e.clientX, e.clientY);
 });
 
-// â”€â”€ TOAST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── TOAST ────────────────────────────────────────────────────
 let toastTimer;
 function toast(msg, type = 'success') {
     const t = document.getElementById('toast');
     t.className = `toast ${type}`;
-    document.getElementById('toast-icon').textContent = type === 'success' ? 'âœ…' : type === 'error' ? 'âš ï¸' : 'â„¹ï¸';
+    document.getElementById('toast-icon').textContent = type === 'success' ? '✅' : type === 'error' ? '⚠️' : 'ℹ️';
     document.getElementById('toast-msg').textContent = msg;
     t.classList.add('visible');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => t.classList.remove('visible'), 3500);
 }
 
-// â”€â”€ LIGHTBOX â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const lbImages = ['bg1.png', 'bg2.png', 'bg3.png', 'bg4.png'];
+// ── LIGHTBOX ─────────────────────────────────────────────────
+const lbImages = ['aurobg1.webp', 'aurobg2.webp', 'aurobg3.webp', 'aurobg4.webp', 'aurobg5.webp', 'aurobg6.webp'];
 let lbIdx = 0;
 
 function lbOpen(i) {
@@ -144,7 +218,7 @@ document.getElementById('lightbox').addEventListener('touchend', e => {
     if (Math.abs(dx) > 50) lbNav(dx > 0 ? -1 : 1);
 });
 
-// â”€â”€ FAQ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── FAQ ───────────────────────────────────────────────────────
 function toggleFAQ(trigger) {
     const item = trigger.closest('.faq-item');
     const isOpen = item.classList.contains('open');
@@ -152,23 +226,24 @@ function toggleFAQ(trigger) {
         i.classList.remove('open');
         const a = i.querySelector('.faq-a');
         if (a) a.style.maxHeight = '0';
+        const q = i.querySelector('.faq-q');
+        if (q) q.setAttribute('aria-expanded', 'false');
     });
     if (!isOpen) {
         item.classList.add('open');
         const a = item.querySelector('.faq-a');
         if (a) a.style.maxHeight = a.scrollHeight + 'px';
+        trigger.setAttribute('aria-expanded', 'true');
     }
 }
 
-// â”€â”€ WHATSAPP FLOAT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── WHATSAPP FLOAT ────────────────────────────────────────────
 const waFloat = document.getElementById('wa-float');
-if (waFloat) {
-    window.addEventListener('scroll', () => {
-        waFloat.classList.toggle('visible', window.scrollY > 300);
-    });
+function updateWaFloat() {
+    if (waFloat) waFloat.classList.toggle('visible', window.scrollY > 300);
 }
 
-// â”€â”€ CINEMATIC TRANSITIONS & SOUNDS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── CINEMATIC TRANSITIONS & SOUNDS ────────────────────────────
 const audioToggle = document.getElementById('audio-toggle');
 const audioOnIcon = document.getElementById('audio-on');
 const audioOffIcon = document.getElementById('audio-off');
@@ -182,8 +257,7 @@ let filterNode = null;
 let gainNode = null;
 
 const soundUrls = {
-    pouring: 'https://cdn.pixabay.com/audio/2022/03/15/audio_7392657e0f.mp3', // Coffee Pour
-    ambient: 'https://cdn.pixabay.com/audio/2022/03/10/audio_c8c8a73430.mp3'  // Soft Coffee Shop
+    pouring: 'https://cdn.pixabay.com/audio/2022/03/15/audio_7392657e0f.mp3' // Coffee Pour
 };
 
 const audioBuffers = {};
@@ -243,13 +317,13 @@ function startTransition(url) {
     playAtmosphericSound('pouring');
     setTimeout(() => {
         window.location.href = url;
-    }, 1200);
+    }, 500);
 }
 
 // Intercept Links
 document.querySelectorAll('a').forEach(a => {
-    a.addEventListener('click', async e => {
-        if (!audioCtx) await initAudio();
+    a.addEventListener('click', e => {
+        if (!audioCtx) initAudio();
         const href = a.getAttribute('href');
         if (href && !href.startsWith('#') && !a.target && !href.startsWith('mailto:') && !href.startsWith('tel:') && !href.startsWith('https://wa.me')) {
             e.preventDefault();
@@ -277,18 +351,10 @@ window.addEventListener('pageshow', (e) => {
     }
 });
 
-// General interaction sounds (Hover only)
-document.querySelectorAll('.btn-primary, .btn-outline, .pkg-card, .contact-card, .faq-q').forEach(el => {
-    el.addEventListener('mouseenter', async () => {
-        if (!audioCtx) await initAudio();
-        playAtmosphericSound('ambient');
-    });
-});
+console.log('%c AURO ✨ AURO COFFEE CORNER ', 'background:#C5A059;color:#000;font-size:14px;font-weight:bold;padding:8px 16px;border-radius:4px;');
 
-console.log('%c AURO âœ¨ AURO COFFEE CORNER ', 'background:#C5A059;color:#000;font-size:14px;font-weight:bold;padding:8px 16px;border-radius:4px;');
-
-// â”€â”€ SCROLL BLUR & FADE EFFECT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-window.addEventListener('scroll', () => {
+// ── SCROLL BLUR & FADE EFFECT ────────────────────────────────
+function updateBgFilter() {
     const bgEl = document.getElementById('bg-slideshow');
     if (!bgEl) return;
     const maxScroll = window.innerHeight * 1.2;
@@ -300,25 +366,26 @@ window.addEventListener('scroll', () => {
 
     bgEl.style.filter = `blur(${blurVal}px) brightness(${brightnessVal}) saturate(1.2)`;
     bgEl.style.opacity = opacityVal.toString();
-});
+}
 
-// â”€â”€ SCROLL TO TOP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── SCROLL TO TOP ────────────────────────────────────────────
 const scrollTopBtn = document.getElementById('scrollTop');
+function updateScrollTopBtn() {
+    if (!scrollTopBtn) return;
+    if (window.scrollY > 300) scrollTopBtn.classList.add('visible');
+    else scrollTopBtn.classList.remove('visible');
+}
 if (scrollTopBtn) {
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 300) scrollTopBtn.classList.add('visible');
-        else scrollTopBtn.classList.remove('visible');
-    });
     scrollTopBtn.addEventListener('click', () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 }
 
-// â”€â”€ SCROLL DEPTH TRACKING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-(function() {
+// ── SCROLL DEPTH TRACKING ──────────────────────────────────
+const updateScrollDepth = (function() {
     let maxScrollPct = 0;
     let reported = 0;
-    window.addEventListener('scroll', () => {
+    return function() {
         const scrolled = window.scrollY + window.innerHeight;
         const total = document.documentElement.scrollHeight;
         const pct = Math.round((scrolled / total) * 100);
@@ -328,12 +395,29 @@ if (scrollTopBtn) {
             if (maxScrollPct - reported >= 25) {
                 reported = maxScrollPct;
                 if (typeof FeedbackService !== 'undefined') {
-                    FeedbackService.logVisitor('Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©', maxScrollPct);
+                    FeedbackService.logVisitor('الرئيسية', maxScrollPct);
                 }
             }
         }
-    }, { passive: true });
+    };
 })();
+
+// ── UNIFIED SCROLL DISPATCHER (rAF-throttled) ─────────────────
+let scrollTicking = false;
+function onScrollFrame() {
+    updateNavScroll();
+    updateWaFloat();
+    updateBgFilter();
+    updateScrollTopBtn();
+    updateScrollDepth();
+    scrollTicking = false;
+}
+window.addEventListener('scroll', () => {
+    if (!scrollTicking) {
+        requestAnimationFrame(onScrollFrame);
+        scrollTicking = true;
+    }
+}, { passive: true });
 
 // ── REVIEWS SPOTLIGHT FADE ────────────────────────────────
 function loadReviewsTicker() {
@@ -360,16 +444,20 @@ function loadReviewsTicker() {
     // Build all cards — CSS grid stacks them; opacity fades between them
     approved.forEach((r, i) => {
         const rating = Math.min(5, Math.max(0, parseInt(r.rating) || 5));
-        const stars  = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+        const starsHtml = '★'.repeat(rating).split('').map(s => `<span>${s}</span>`).join('')
+            + '☆'.repeat(5 - rating).split('').map(s => `<span>${s}</span>`).join('');
+        const name = r.name || 'عميل مميز';
+        const initial = escHtml(name.trim().charAt(0) || 'ع');
         const card   = document.createElement('div');
         card.className = 'rv-spot-card' + (i === 0 ? ' active' : '');
         card.innerHTML = `
+            <div class="rv-initial-badge">${initial}</div>
             <span class="rv-big-quote">"</span>
             <p class="rv-spot-text">${escHtml(r.comment || 'تجربة رائعة مع أورو ✦')}</p>
             <div class="rv-spot-author">
                 <div class="rv-spot-divider"></div>
-                <div class="rv-spot-name">${escHtml(r.name || 'عميل مميز')}</div>
-                <div class="rv-spot-stars">${stars}</div>
+                <div class="rv-spot-name">${escHtml(name)}</div>
+                <div class="rv-spot-stars">${starsHtml}</div>
             </div>`;
         track.appendChild(card);
     });
@@ -470,6 +558,8 @@ function initCoverFlow() {
             if (!c.classList.contains('is-center')) {
                 currentIndex = i;
                 updateGallery();
+            } else {
+                lbOpen(i);
             }
         });
     });

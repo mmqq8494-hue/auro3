@@ -128,10 +128,11 @@ class AuroDatePicker {
             const date = new Date(year, month, d);
             const isToday = new Date().toDateString() === date.toDateString();
             const isDisabled = date < tomorrow;
-            const isActive = this.input.value === date.toISOString().split('T')[0];
+            const localDateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            const isActive = this.input.value === localDateStr;
 
             html += `<div class="cal-day ${isDisabled ? 'disabled' : ''} ${isActive ? 'active' : ''} ${isToday ? 'today' : ''}" 
-                     data-date="${date.toISOString().split('T')[0]}">${d}</div>`;
+                     data-date="${localDateStr}">${d}</div>`;
         }
 
         html += '</div>';
@@ -331,6 +332,10 @@ function animateThermos(idx, drinkName) {
 
 
 // ── DRINKS ───────────────────────────────────────────────────
+function unavailableDrink() {
+    toast('غير متوفر حالياً — ترقبوه قريباً ✨', 'error');
+}
+
 function toggleDrink(card, name) {
     if (booking.limit === 0) return;
 
@@ -375,7 +380,7 @@ function validateAll() {
     const phoneOk = validateField('f-phone', 'inp-phone', v => /^(05|5)[0-9]{8}$/.test(v));
     const cityOk = validateField('f-city', 'inp-city', v => v !== '');
     const eventOk = validateField('f-event', 'inp-event', v => v.length >= 3);
-    const today = new Date(); today.setDate(today.getDate() + 1);
+    const today = new Date(); today.setDate(today.getDate() + 1); today.setHours(0, 0, 0, 0);
     const dateOk = validateField('f-date', 'inp-date', v => { if (!v) return false; return new Date(v) >= today; });
     const timeOk = validateField('f-time', 'inp-time', v => v !== '');
     return nameOk && phoneOk && cityOk && eventOk && dateOk && timeOk;
@@ -430,64 +435,110 @@ document.getElementById('auroForm').addEventListener('submit', async e => {
         notes: document.getElementById('inp-notes').value.trim()
     };
 
+    const deco = document.getElementById('inp-add-deco')?.checked;
+    const host = document.getElementById('inp-add-host')?.checked;
+    
+    let additionsArr = [];
+    let additionsPrice = 0;
+    if (deco) { additionsArr.push('زينة (+١٠٠)'); additionsPrice += 100; }
+    if (host) { additionsArr.push('عاملة ضيافة (+٢٠٠)'); additionsPrice += 200; }
+    
+    const finalPrice = booking.price + additionsPrice;
+    const additionsStr = additionsArr.join('، ');
+
     const WEBHOOK = 'https://discord.com/api/webhooks/1466534582286291117/aVV9y5qUHQ3eCAi9hC52bfTNC4csvz-1mPJ7D_IVcJtYZIphv94GJOZBRs2ZvtuOt3BG';
 
     const drinks = booking.thermoses.map(t => t.drink).filter(d => d);
 
+    // ── Save booking to Supabase (critical — must not depend on Discord/webhook success) ──
+    const bookingData = {
+      id:       'bk_' + Date.now(),
+      date:     new Date().toISOString(),
+      createdAt: Date.now(),
+      status:   'pending',
+      name:     d.name,
+      phone:    d.phone,
+      city:     d.city,
+      event:    d.event,
+      eventDate: d.date,
+      time:     d.time,
+      notes:    d.notes || '',
+      pkg:      booking.pkg,
+      cups:     booking.cups,
+      price:    finalPrice,
+      additions: additionsStr,
+      drinks:   drinks.join(' + ') || '-',
+    };
+
     try {
-        await fetch(WEBHOOK, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                embeds: [{
-                    title: '🛎️ طلب حجز AURO جديد',
-                    color: 12951641,
-                    fields: [
-                        { name: '👤 العميل', value: d.name, inline: true },
-                        { name: '📱 الجوال', value: d.phone, inline: true },
-                        { name: '📦 الباقة', value: `${booking.pkg} – ${booking.cups} كوب (${booking.price} ريال)`, inline: true },
-                        { name: '☕ المشروبات', value: drinks.join(' + ') || 'لم تُحدد' },
-                        { name: '📍 المدينة', value: d.city, inline: true },
-                        { name: '🎉 المناسبة', value: d.event, inline: true },
-                        { name: '📅 الموعد', value: `${d.date} | ${d.time}` },
-                        { name: '📝 ملاحظات', value: d.notes || 'لا توجد' }
-                    ],
-                    timestamp: new Date().toISOString()
-                }]
-            })
-        });
+        if (window.sb) {
+          try {
+            const { error } = await window.sb.rpc('insert_booking', { row_data: window.camelToSnake(bookingData) });
+            if (error) throw error;
+            console.log("Supabase booking saved successfully!");
+          } catch(e) {
+            console.error("Supabase booking save error:", e);
+            alert("خطأ: تم إرسال الطلب لكن لم يتم حفظه في قاعدة البيانات بسبب مشكلة في الصلاحيات أو الاتصال.");
+          }
+        } else {
+            alert("خطأ: تعذر الاتصال بقاعدة البيانات. تأكد من جودة اتصالك بالإنترنت.");
+        }
+
+        // Best-effort Discord notification — must never block/skip the booking save above.
+        try {
+            await fetch(WEBHOOK, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    embeds: [{
+                        title: '🛎️ طلب حجز AURO جديد',
+                        color: 12951641,
+                        fields: [
+                            { name: '👤 العميل', value: d.name, inline: true },
+                            { name: '📱 الجوال', value: d.phone, inline: true },
+                            { name: '📦 الباقة', value: `${booking.pkg} - ${booking.cups} كوب (${finalPrice} ريال)`, inline: true },
+                            { name: '☕ المشروبات', value: drinks.join(' + ') || 'لم يحدد' },
+                            { name: '✨ الإضافات', value: additionsStr || 'لا يوجد', inline: true },
+                            { name: '📍 المدينة', value: d.city, inline: true },
+                            { name: '🎉 المناسبة', value: d.event, inline: true },
+                            { name: '📅 الموعد', value: `${d.date} | ${d.time}` },
+                            { name: '📝 ملاحظات', value: d.notes || 'لا يوجد' }
+                        ],
+                        timestamp: new Date().toISOString()
+                    }]
+                })
+            });
+        } catch (webhookErr) {
+            console.error('Discord webhook failed (non-critical, booking already saved):', webhookErr);
+        }
 
         toast('تم إرسال طلبك بنجاح! سيتواصل معك فريقنا 🎉', 'success');
 
-        // ── Save booking to localStorage for admin tracking ──
-        const bookings = JSON.parse(localStorage.getItem('auro_bookings') || '[]');
-        bookings.push({
-          id:       'bk_' + Date.now(),
-          date:     new Date().toISOString(),
-          status:   'pending',
-          name:     d.name,
-          phone:    d.phone,
-          city:     d.city,
-          event:    d.event,
-          eventDate: d.date,
-          time:     d.time,
-          notes:    d.notes || '',
-          pkg:      booking.pkg,
-          cups:     booking.cups,
-          price:    booking.price,
-          drinks:   drinks.join(' + ') || '—',
-        });
-        localStorage.setItem('auro_bookings', JSON.stringify(bookings));
-
         clearSaved();
 
-        const wa = `أهلاً AURO ✨%0A%0Aطلب حجز جديد:%0A👤 ${d.name}%0A📱 ${d.phone}%0A📦 ${booking.pkg} (${booking.cups} كوب - ${booking.price} ريال)%0A☕ ${drinks.join(' + ')}%0A📍 ${d.city}%0A🎉 ${d.event}%0A📅 ${d.date} %7C ${d.time}${d.notes ? '%0A📝 ' + d.notes : ''}`;
-        setTimeout(() => window.open(`https://wa.me/966579383960?text=${wa}`, '_blank'), 1000);
+        const wa = `حياكم AURO ☕%0A%0Aطلب حجز جديد:%0A👤 ${d.name}%0A📱 ${d.phone}%0A📦 ${booking.pkg} (${booking.cups} كوب - ${finalPrice} ريال)%0A✨ ${additionsStr || 'بدون إضافات'}%0A☕ ${drinks.join(' + ')}%0A📍 ${d.city}%0A🎉 ${d.event}%0A📅 ${d.date} %7C ${d.time}${d.notes ? '%0A📝 ' + d.notes : ''}`;
+        
+        // Show success message inside the container
+        const container = document.querySelector('.booking-form-wrap');
+        container.innerHTML = `
+            <div style="text-align:center; padding: 40px 20px; background: rgba(0,0,0,0.2); border-radius: 16px; border: 1px solid var(--glass-border);">
+                <div style="font-size: 4rem; margin-bottom: 20px; animation: pop 0.6s cubic-bezier(.4,0,.2,1);">✨</div>
+                <h2 style="color: var(--gold); margin-bottom: 15px; font-family: 'Outfit', 'Tajawal', sans-serif;">شكراً لك ${d.name}!</h2>
+                <p style="color: var(--text-muted); line-height: 1.8; margin-bottom: 30px;">
+                    لقد استلمنا طلبك بنجاح. نحن سعداء جداً ومتحمسون لنكون جزءاً من مناسبتك السعيدة.<br><br>
+                    سيتم تحويلك الآن إلى واتساب للتواصل المباشر مع فريقنا لتأكيد التفاصيل وإتمام الحجز.
+                </p>
+                <div style="font-size: 0.9rem; color: var(--gold-light);">جاري التحويل... ⏳</div>
+            </div>
+        `;
+
+        setTimeout(() => {
+            window.location.href = `https://wa.me/966579383960?text=${wa}`;
+        }, 4000);
 
     } catch (err) {
         console.error(err);
         toast('حدث خطأ في الإرسال، يرجى المحاولة مجدداً', 'error');
-    } finally {
         btn.disabled = false;
         text.textContent = 'تأكيد الطلب وإرسال ✨';
     }
@@ -532,9 +583,9 @@ function restoreBooking() {
     const pkgParam = params.get('pkg');
     if (pkgParam) {
         const pkgMap = {
-            gold: { name: 'الذهبية', cups: 20, limit: 1, price: 450 },
-            platinum: { name: 'البلاتينية', cups: 40, limit: 2, price: 550 },
-            royal: { name: 'الملكية', cups: 60, limit: 3, price: 650 }
+            gold: { name: 'الذهبية', cups: '20-35', limit: 1, price: 450 },
+            platinum: { name: 'البلاتينية', cups: '40-70', limit: 2, price: 650 },
+            royal: { name: 'الملكية', cups: '60-100', limit: 3, price: 850 }
         };
         const pkg = pkgMap[pkgParam];
         if (pkg) {

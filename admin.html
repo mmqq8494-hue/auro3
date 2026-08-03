@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AURO | لوحة التحكم</title>
   <link rel="stylesheet" href="style-feedback.css">
+  <link rel="stylesheet" href="admin-core.css">
+  <!-- External Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
   <link rel="icon" type="image/png" href="favicon.png">
   <meta name="robots" content="noindex, nofollow">
   <meta property="og:type" content="website" />
@@ -204,29 +209,38 @@
     <div class="login-card">
       <img src="logo.png" alt="AURO" class="logo">
       <h2><span class="gold-text">AURO</span> Dashboard</h2>
-      <input type="text"     id="username" placeholder="اسم المستخدم" autocomplete="username">
+      <input type="email"    id="email"    placeholder="البريد الإلكتروني" autocomplete="username">
       <input type="password" id="password" placeholder="كلمة المرور"  autocomplete="current-password">
-      <!-- CAPTCHA -->
-      <div id="captcha-wrap" style="display:flex;align-items:center;gap:10px;margin:4px 0">
-        <span id="captcha-q" style="color:var(--gold);font-size:0.9rem;font-weight:600;min-width:110px"></span>
-        <input type="number" id="captcha-ans" placeholder="الجواب" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);border-radius:8px;color:var(--text-main);font-family:'Tajawal',sans-serif;font-size:0.9rem;padding:10px 14px;outline:none;width:100%;box-sizing:border-box" autocomplete="off">
-      </div>
       <p class="login-err" id="login-err"></p>
-      <div id="lockout-msg" style="display:none;text-align:center;color:#f87171;font-size:0.85rem;margin-bottom:8px">🔒 محاولات كثيرة — انتظر <span id="lockout-timer"></span></div>
       <button class="btn-next" onclick="doLogin()" id="login-btn">دخول آمن 🔒</button>
     </div>
   </div>
 
   <!-- ── ADMIN ── -->
-  <main class="admin-container hidden" id="admin-main">
-
-    <div class="admin-header">
-      <div class="brand">
+  <main class="admin-container hidden admin-mode" id="admin-main">
+    
+    <!-- SIDEBAR -->
+    <nav class="admin-sidebar">
+      <div class="admin-brand">
         <img src="logo.png" alt="AURO">
-        <h1>لوحة التحكم <span class="gold-text">الخاصة</span></h1>
+        <h2>AURO <span>Admin</span></h2>
       </div>
-      <button class="btn-logout" onclick="logout()">خروج</button>
-    </div>
+      <div class="admin-nav">
+        <a class="nav-item active" data-tab="tab-overview"><span class="icon">📊</span> نظرة عامة</a>
+        <a class="nav-item" data-tab="tab-bookings"><span class="icon">📦</span> الحجوزات <span class="count-badge" id="bookings-badge">0</span></a>
+        <a class="nav-item" data-tab="tab-clients"><span class="icon">👥</span> العملاء</a>
+        <a class="nav-item" data-tab="tab-invoices"><span class="icon">🧾</span> الفواتير</a>
+        <a class="nav-item" data-tab="tab-contracts"><span class="icon">📝</span> العقود</a>
+        <a class="nav-item" data-tab="tab-forms"><span class="icon">📋</span> الاستمارات</a>
+        <a class="nav-item" data-tab="tab-reviews"><span class="icon">⭐</span> التقييمات <span class="count-badge" id="pending-badge">0</span></a>
+        <a class="nav-item" data-tab="tab-visitors"><span class="icon">👁️</span> الزوار</a>
+        <a class="nav-item" data-tab="tab-settings"><span class="icon">⚙️</span> الإعدادات</a>
+        <div style="flex:1"></div>
+        <button class="btn-dark" onclick="logout()" style="margin: 20px; color: var(--admin-danger); border-color: rgba(248,113,113,0.3)">تسجيل الخروج 🚪</button>
+      </div>
+    </nav>
+
+    <div class="admin-content">
 
     <!-- KPI STATS -->
     <div class="stats-grid" id="stats-grid">
@@ -238,17 +252,8 @@
       <div class="stat-box"><span class="stat-icon">✅</span><div class="stat-num" id="s-approved">—</div><div class="stat-lbl">معتمدة</div></div>
     </div>
 
-    <!-- TABS -->
-    <div class="tabs">
-      <button class="tab-btn active" id="tab-btn-overview"  onclick="showTab('overview')">نظرة عامة</button>
-      <button class="tab-btn"        id="tab-btn-reviews"   onclick="showTab('reviews')">التقييمات <span class="count-badge" id="pending-badge">0</span></button>
-      <button class="tab-btn"        id="tab-btn-bookings"  onclick="showTab('bookings')">الحجوزات <span class="count-badge" id="bookings-badge">0</span></button>
-      <button class="tab-btn"        id="tab-btn-visitors"  onclick="showTab('visitors')">الزوار</button>
-      <button class="tab-btn"        id="tab-btn-settings"  onclick="showTab('settings')">الإعدادات</button>
-    </div>
-
     <!-- ══ TAB: OVERVIEW ══ -->
-    <div id="tab-overview">
+    <div id="tab-overview" class="admin-tab-content">
       <div class="insight-row">
         <!-- Referrers -->
         <div class="insight-card">
@@ -284,7 +289,7 @@
     </div>
 
     <!-- ══ TAB: REVIEWS ══ -->
-    <div id="tab-reviews" class="hidden">
+    <div id="tab-reviews" class="admin-tab-content hidden">
       <div class="search-row">
         <input class="search-input" id="review-search" placeholder="ابحث باسم العميل أو التعليق..." oninput="loadReviews()">
         <select class="sort-select" id="review-sort" onchange="loadReviews()">
@@ -306,7 +311,7 @@
     </div>
 
     <!-- ══ TAB: BOOKINGS ══ -->
-    <div id="tab-bookings" class="hidden">
+    <div id="tab-bookings" class="admin-tab-content hidden">
       <div class="search-row">
         <input class="search-input" id="booking-search" placeholder="ابحث بالاسم أو الجوال أو المدينة..." oninput="loadBookings()">
         <select class="sort-select" id="booking-filter" onchange="loadBookings()">
@@ -321,7 +326,7 @@
     </div>
 
     <!-- ══ TAB: VISITORS ══ -->
-    <div id="tab-visitors" class="hidden">
+    <div id="tab-visitors" class="admin-tab-content hidden">
       <div class="search-row">
         <input class="search-input" id="visitor-search" placeholder="ابحث بالمدينة أو المصدر أو الجهاز..." oninput="loadVisitors()">
         <select class="sort-select" id="visitor-sort" onchange="loadVisitors()">
@@ -349,24 +354,21 @@
     </div>
 
     <!-- ══ TAB: SETTINGS ══ -->
-    <div id="tab-settings" class="hidden">
+    <div id="tab-settings" class="admin-tab-content hidden">
       <div class="insight-card" style="margin-bottom:16px;">
         <h4>🔑 بيانات الدخول للأدمن</h4>
-        <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:14px;">يمكنك تغيير كلمة المرور مباشرة من الكود في ملف admin.html (السطر: const ADMIN_PASS)</p>
-        <div style="display:flex;gap:10px;align-items:center;font-size:0.85rem;">
-          <span style="color:var(--text-muted);">يوزر:</span> <code style="color:var(--gold)">admin</code>
-          &nbsp;&nbsp;
-          <span style="color:var(--text-muted);">باسوورد:</span> <code style="color:var(--gold)" id="pass-display">••••••••</code>
-          <button class="btn-export" style="padding:4px 10px;font-size:0.75rem" onclick="document.getElementById('pass-display').textContent = document.getElementById('pass-display').textContent === '••••••••' ? _ap : '••••••••'">عرض</button>
-        </div>
+        <p style="font-size:0.85rem;color:var(--text-muted);">تسجيل الدخول الآن عبر حساب حقيقي (Supabase Auth) بالبريد الإلكتروني وكلمة المرور. لتغيير كلمة المرور أو إضافة أدمن آخر، من لوحة Supabase → Authentication → Users.</p>
       </div>
       <div class="insight-card" style="margin-bottom:16px;">
         <h4>📋 معلومات الموقع</h4>
         <div style="font-size:0.85rem;color:var(--text-muted);line-height:2;">
           <div>رابط التقييم: <code style="color:var(--gold)">feedback.html</code></div>
           <div>لوحة الإدارة: <code style="color:var(--gold)">admin.html</code></div>
-          <div>التخزين: <code style="color:var(--gold)">localStorage</code> (نفس الجهاز)</div>
+          <div>التخزين: <code style="color:var(--gold)">Firebase Cloud</code> (سحابي)</div>
           <div>API الموقع: <code style="color:var(--gold)">ipapi.co</code></div>
+          <div style="margin-top: 15px;">
+            <button class="btn-primary" style="padding: 8px 15px; font-size: 0.9rem; background: var(--gold); color: #000;" onclick="backupDatabase()">💾 أخذ نسخة احتياطية (Backup)</button>
+          </div>
         </div>
       </div>
       <div class="danger-zone">
@@ -377,154 +379,389 @@
       </div>
     </div>
 
+    </div>
+
+    <!-- ══ NEW TABS ══ -->
+    
+    <!-- ══ TAB: CLIENTS ══ -->
+    <div id="tab-clients" class="admin-tab-content hidden">
+      <div class="admin-header-bar">
+        <h1>إدارة العملاء</h1>
+        <div class="admin-header-actions">
+          <button class="btn-gold" id="btn-new-client">➕ إضافة عميل</button>
+        </div>
+      </div>
+      <div class="data-card">
+        <div class="data-table-wrap" id="clients-list"></div>
+      </div>
+    </div>
+
+    <!-- ══ TAB: INVOICES ══ -->
+    <div id="tab-invoices" class="admin-tab-content hidden">
+      <div class="admin-header-bar">
+        <h1>الفواتير وعروض الأسعار</h1>
+        <div class="admin-header-actions">
+          <button class="btn-gold" id="btn-new-invoice">➕ إنشاء فاتورة</button>
+        </div>
+      </div>
+      <div class="data-card">
+        <div class="data-table-wrap" id="invoices-list"></div>
+      </div>
+    </div>
+
+    <!-- ══ TAB: CONTRACTS ══ -->
+    <div id="tab-contracts" class="admin-tab-content hidden">
+      <div class="admin-header-bar">
+        <h1>العقود الإلكترونية</h1>
+        <div class="admin-header-actions">
+          <button class="btn-gold" id="btn-new-contract">➕ إنشاء عقد جديد</button>
+        </div>
+      </div>
+      <div class="data-card">
+        <div class="data-table-wrap" id="contracts-list"></div>
+      </div>
+    </div>
+
+    <!-- ══ TAB: FORMS ══ -->
+    <div id="tab-forms" class="admin-tab-content hidden">
+      <div class="admin-header-bar">
+        <h1>استمارات الاستلام والتسليم</h1>
+        <div class="admin-header-actions">
+          <button class="btn-gold" id="btn-new-form">➕ استمارة جديدة</button>
+        </div>
+      </div>
+      <div class="data-card">
+        <div class="data-table-wrap" id="forms-list"></div>
+      </div>
+    </div>
+
+    </div> <!-- End admin-content -->
+
+    <!-- ── MODALS ── -->
+    
+    <!-- CLIENT MODAL -->
+    <div class="modal-overlay" id="modal-client">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>بيانات العميل</h3>
+          <button class="close-modal" onclick="AdminClients.closeModal()">✕</button>
+        </div>
+        <form id="form-client">
+          <div class="modal-body">
+            <input type="hidden" id="client-id">
+            <div class="form-group"><label>اسم العميل</label><input type="text" id="client-name" class="form-control" required></div>
+            <div class="form-group"><label>رقم الجوال</label><input type="text" id="client-phone" class="form-control" required></div>
+            <div class="form-group"><label>المدينة</label><input type="text" id="client-city" class="form-control"></div>
+            <div class="form-group"><label>ملاحظات داخلية</label><textarea id="client-notes" class="form-control" rows="3"></textarea></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-dark" onclick="AdminClients.closeModal()">إلغاء</button>
+            <button type="submit" class="btn-gold">حفظ التغييرات</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- INVOICE MODAL -->
+    <div class="modal-overlay" id="modal-invoice">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>فاتورة / عرض سعر</h3>
+          <button class="close-modal" onclick="AdminInvoices.closeInvoiceModal()">✕</button>
+        </div>
+        <form id="form-invoice">
+          <div class="modal-body">
+            <input type="hidden" id="inv-id">
+            
+            <div class="form-group" style="background: rgba(197, 160, 89, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+              <label style="color: var(--admin-gold); font-weight: bold;">استيراد بيانات من حجز موجود؟</label>
+              <select id="inv-import-booking" class="form-control" onchange="importBookingToInvoice(this.value)">
+                <option value="">-- تعبئة يدوية --</option>
+              </select>
+            </div>
+
+            <div class="section-title-sm">المعلومات الأساسية</div>
+            <div class="form-row">
+              <div class="form-group"><label>نوع المستند</label><select id="inv-type" class="form-control"><option value="quote">عرض سعر (قبل التحويل)</option><option value="invoice">فاتورة نهائية (بعد التحويل)</option></select></div>
+              <div class="form-group"><label>حالة الدفع</label><select id="inv-status" class="form-control"><option value="pending">غير مدفوعة</option><option value="paid">مدفوعة بالكامل</option><option value="cancelled">ملغية</option></select></div>
+            </div>
+
+            <div class="section-title-sm">بيانات العميل</div>
+            <div class="form-row">
+              <div class="form-group"><label>العميل (الاسم)</label><input type="text" id="inv-client" class="form-control" required></div>
+              <div class="form-group"><label>رقم الجوال</label><input type="text" id="inv-phone" class="form-control" required></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>المدينة</label><input type="text" id="inv-city" class="form-control" required></div>
+              <div class="form-group"><label>طريقة الدفع (اختياري)</label><select id="inv-pay-method" class="form-control"><option value="">تحديد...</option><option value="bank">تحويل بنكي</option><option value="cash">نقدي</option><option value="card">شبكة</option></select></div>
+            </div>
+
+            <div class="section-title-sm">بيانات المناسبة</div>
+            <div class="form-row">
+              <div class="form-group"><label>تاريخ المناسبة</label><input type="date" id="inv-event-date" class="form-control"></div>
+              <div class="form-group"><label>موقع المناسبة</label><input type="text" id="inv-event-loc" class="form-control"></div>
+            </div>
+            <div class="section-title-sm">الباقة والتسعير</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>الباقة</label>
+                <select id="inv-corner" class="form-control" onchange="AdminInvoices.applyPricing()">
+                  <option value="">-- اختر الباقة --</option>
+                  <option value="الذهبية">☕ الذهبية — 450 ريال (20-35 كوب)</option>
+                  <option value="البلاتينية">✨ البلاتينية — 650 ريال (40-70 كوب)</option>
+                  <option value="الملكية">👑 الملكية — 850 ريال (60-100 كوب)</option>
+                  <option value="custom">أخرى / تسعير مخصص</option>
+                </select>
+              </div>
+              <div class="form-group"><label>نوع المناسبة</label><input type="text" id="inv-event-type" class="form-control" placeholder="مثال: حفل زفاف"></div>
+            </div>
+            <div class="form-group hidden" id="inv-corner-custom-wrap"><label>اسم الباقة المخصصة</label><input type="text" id="inv-corner-custom" class="form-control" placeholder="مثال: ركن قهوة خاص"></div>
+            <div class="form-row">
+              <div class="form-group"><label>عدد الضيوف</label><input type="number" id="inv-guests" class="form-control" placeholder="العدد المتوقع"></div>
+              <div class="form-group"><label>مدة التشغيل</label><input type="text" id="inv-duration" class="form-control" placeholder="مثال: 5 ساعات"></div>
+            </div>
+            <div class="form-group">
+              <label>إضافات اختيارية</label>
+              <div class="form-row">
+                <label style="display:flex;align-items:center;gap:6px;font-weight:normal;"><input type="checkbox" id="inv-add-deco" onchange="AdminInvoices.applyPricing()"> 🎈 زينة (+100 ريال)</label>
+                <label style="display:flex;align-items:center;gap:6px;font-weight:normal;"><input type="checkbox" id="inv-add-host" onchange="AdminInvoices.applyPricing()"> 💁‍♀️ عاملة ضيافة (+200 ريال)</label>
+              </div>
+            </div>
+            <div class="form-group"><label>ملاحظات / إضافات أخرى</label><textarea id="inv-additions" class="form-control" rows="2" placeholder="مثال: المشروبات المختارة، أي تفاصيل إضافية"></textarea></div>
+
+            <div class="section-title-sm">المبالغ (مفصولة)</div>
+            <div class="form-row">
+              <div class="form-group"><label>قيمة الخدمة (ريال)</label><input type="number" id="inv-service-val" class="form-control" value="0" min="0" oninput="AdminInvoices.calculateTotal()"></div>
+              <div class="form-group"><label>مبلغ التأمين (ريال)</label><input type="number" id="inv-deposit-val" class="form-control" value="500" min="0" oninput="AdminInvoices.calculateTotal()"></div>
+            </div>
+            <div class="form-group"><label>حالة مبلغ التأمين</label><select id="inv-deposit-status" class="form-control"><option value="held">قيد الاحتفاظ</option><option value="refunded">تم استرجاعه</option><option value="deducted">تم خصم جزء منه</option><option value="not_refunded">غير مسترد</option></select></div>
+
+            <div class="form-group"><label>ملاحظات إضافية للفاتورة</label><textarea id="inv-notes" class="form-control" rows="2"></textarea></div>
+
+            <div style="text-align:left; margin-top:15px; font-size:1.2rem; font-weight:bold; background:rgba(255,255,255,0.02); padding:15px; border-radius:8px;">
+              الإجمالي المطلوب: <span id="inv-total-display" style="color:var(--admin-gold)">0 ريال</span>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-dark" onclick="AdminInvoices.closeInvoiceModal()">إلغاء</button>
+            <button type="submit" class="btn-gold">حفظ الفاتورة</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- CONTRACT MODAL -->
+    <div class="modal-overlay" id="modal-contract">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>بيانات العقد الإلكتروني</h3>
+          <button class="close-modal" onclick="AdminContracts.closeModal()">✕</button>
+        </div>
+        <form id="form-contract">
+          <div class="modal-body">
+            <input type="hidden" id="contract-id">
+            
+            <div class="form-group" style="background: rgba(197, 160, 89, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+              <label style="color: var(--admin-gold); font-weight: bold;">استيراد بيانات من حجز موجود؟</label>
+              <select id="con-import-booking" class="form-control" onchange="importBookingToContract(this.value)">
+                <option value="">-- تعبئة يدوية --</option>
+              </select>
+            </div>
+
+            <div class="section-title-sm">حالة العقد الأساسية</div>
+            <div class="form-row">
+              <div class="form-group"><label>حالة العقد</label><select id="contract-status" class="form-control"><option value="draft">مسودة</option><option value="sent">مُرسل للعميل</option><option value="signed">موقّع ومكتمل</option><option value="cancelled">ملغى</option></select></div>
+            </div>
+
+            <div class="section-title-sm">الطرف الثاني (العميل)</div>
+            <div class="form-row">
+              <div class="form-group"><label>اسم العميل</label><input type="text" id="contract-client" class="form-control" required></div>
+              <div class="form-group"><label>رقم الجوال</label><input type="text" id="contract-phone" class="form-control" required></div>
+            </div>
+            <div class="form-group"><label>المدينة</label><input type="text" id="contract-city" class="form-control"></div>
+
+            <div class="section-title-sm">موضوع العقد (تفاصيل المناسبة)</div>
+            <div class="form-row">
+              <div class="form-group"><label>نوع المناسبة</label><input type="text" id="contract-event-type" class="form-control" placeholder="مثال: زفاف" required></div>
+              <div class="form-group"><label>تاريخ المناسبة</label><input type="date" id="contract-event-date" class="form-control" required></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>وقت المناسبة</label><input type="text" id="contract-event-time" class="form-control" placeholder="مثال: 9:00 مساءً"></div>
+              <div class="form-group"><label>موقع المناسبة</label><input type="text" id="contract-event-loc" class="form-control" placeholder="مثال: قاعة الخزامى"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>الباقة</label>
+                <select id="contract-corner" class="form-control" onchange="AdminContracts.applyPricing()">
+                  <option value="">-- اختر الباقة --</option>
+                  <option value="الذهبية">☕ الذهبية — 450 ريال (20-35 كوب)</option>
+                  <option value="البلاتينية">✨ البلاتينية — 650 ريال (40-70 كوب)</option>
+                  <option value="الملكية">👑 الملكية — 850 ريال (60-100 كوب)</option>
+                  <option value="custom">أخرى / تسعير مخصص</option>
+                </select>
+              </div>
+              <div class="form-group"><label>عدد الضيوف</label><input type="text" id="contract-guests" class="form-control" placeholder="مثال: 100 شخص"></div>
+            </div>
+            <div class="form-group hidden" id="contract-corner-custom-wrap"><label>اسم الباقة المخصصة</label><input type="text" id="contract-corner-custom" class="form-control" placeholder="مثال: ركن قهوة خاص"></div>
+            <div class="form-row">
+              <div class="form-group"><label>مدة التشغيل</label><input type="text" id="contract-duration" class="form-control" placeholder="مثال: 4 ساعات"></div>
+            </div>
+            <div class="form-group">
+              <label>إضافات اختيارية</label>
+              <div class="form-row">
+                <label style="display:flex;align-items:center;gap:6px;font-weight:normal;"><input type="checkbox" id="contract-add-deco" onchange="AdminContracts.applyPricing()"> 🎈 زينة (+100 ريال)</label>
+                <label style="display:flex;align-items:center;gap:6px;font-weight:normal;"><input type="checkbox" id="contract-add-host" onchange="AdminContracts.applyPricing()"> 💁‍♀️ عاملة ضيافة (+200 ريال)</label>
+              </div>
+            </div>
+            <div class="form-group"><label>ملاحظات / إضافات أخرى</label><textarea id="contract-additions" class="form-control" rows="2" placeholder="أي إضافات أخرى متفق عليها"></textarea></div>
+
+            <div class="section-title-sm">قيمة العقد</div>
+            <div class="form-row">
+              <div class="form-group"><label>قيمة الخدمة (ريال)</label><input type="number" id="contract-service-val" class="form-control" value="0" min="0" oninput="AdminContracts.calculateTotal()"></div>
+              <div class="form-group"><label>مبلغ التأمين (ريال)</label><input type="number" id="contract-deposit-val" class="form-control" value="500" min="0" oninput="AdminContracts.calculateTotal()"></div>
+            </div>
+            <div style="margin-top:10px; font-weight:bold;">الإجمالي: <span id="contract-total-display" style="color:var(--admin-gold)">0 ريال</span></div>
+            
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-dark" onclick="AdminContracts.closeModal()">إلغاء</button>
+            <button type="submit" class="btn-gold">حفظ العقد</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- FORM MODAL -->
+    <div class="modal-overlay" id="modal-form">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>استمارة استلام / تسليم</h3>
+          <button class="close-modal" onclick="AdminForms.closeModal()">✕</button>
+        </div>
+        <form id="form-receipt">
+          <div class="modal-body">
+            <input type="hidden" id="form-id">
+            
+            <div class="form-group" style="background: rgba(197, 160, 89, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+              <label style="color: var(--admin-gold); font-weight: bold;">استيراد بيانات من حجز موجود؟</label>
+              <select id="form-import-booking" class="form-control" onchange="importBookingToForm(this.value)">
+                <option value="">-- تعبئة يدوية --</option>
+              </select>
+            </div>
+
+            <div class="section-title-sm">معلومات الاستمارة الأساسية</div>
+            <div class="form-row">
+              <div class="form-group"><label>نوع الاستمارة</label><select id="form-type" class="form-control"><option value="delivery">تسليم (قبل المناسبة)</option><option value="receipt">استلام (بعد المناسبة)</option></select></div>
+              <div class="form-group"><label>حالة الاستمارة</label><select id="form-status" class="form-control"><option value="pending">بانتظار الاعتماد</option><option value="signed">معتمدة وموقّعة</option></select></div>
+            </div>
+
+            <div class="section-title-sm">معلومات الطلب</div>
+            <div class="form-row">
+              <div class="form-group"><label>رقم الطلب / العقد المرتبط</label><input type="text" id="form-order-id" class="form-control"></div>
+              <div class="form-group"><label>اسم العميل</label><input type="text" id="form-client" class="form-control" required></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>رقم الجوال</label><input type="text" id="form-phone" class="form-control"></div>
+              <div class="form-group"><label>تاريخ المناسبة</label><input type="date" id="form-event-date" class="form-control"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>الموقع</label><input type="text" id="form-event-loc" class="form-control"></div>
+              <div class="form-group"><label>نوع الركن</label><input type="text" id="form-corner" class="form-control"></div>
+            </div>
+
+            <div class="section-title-sm" style="margin-top:20px;">قائمة العهدة والمعدات</div>
+            <div style="background:rgba(255,255,255,0.02); padding:10px; border-radius:8px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <label style="color:var(--admin-text-muted); font-size:0.85rem;">الأغراض (تحديد الحالة والكمية)</label>
+                <button type="button" class="btn-dark" id="btn-form-add-item" style="padding: 4px 10px; font-size:0.75rem;">+ إضافة غرض</button>
+              </div>
+              <div id="form-items-container"></div>
+            </div>
+
+            <div class="section-title-sm" style="margin-top:20px;">التلفيات والخصومات (إن وجدت)</div>
+            <div class="form-row">
+              <div class="form-group"><label>نوع الضرر</label><select id="form-damage-type" class="form-control"><option value="">لا يوجد ضياع/تلف</option><option value="loss">فقدان</option><option value="break">كسر</option><option value="damage">تلف</option><option value="misuse">سوء استخدام</option><option value="missing">نقص</option></select></div>
+              <div class="form-group"><label>وصف الضرر</label><input type="text" id="form-damage-desc" class="form-control" placeholder="وصف التلف أو النقص"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>قيمة الضرر (ريال)</label><input type="number" id="form-damage-val" class="form-control" value="0" min="0"></div>
+              <div class="form-group"><label>المخصوم من التأمين (ريال)</label><input type="number" id="form-damage-deduct" class="form-control" value="0" min="0"></div>
+            </div>
+            <div class="form-group"><label>المبلغ الإضافي المستحق (ريال)</label><input type="number" id="form-damage-extra" class="form-control" value="0" min="0" placeholder="في حال تجاوز التلفيات مبلغ التأمين"></div>
+
+            <div class="section-title-sm" style="margin-top:20px;">ملاحظات</div>
+            <div class="form-group"><label>ملاحظات تشغيلية</label><textarea id="form-notes" class="form-control" rows="2"></textarea></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-dark" onclick="AdminForms.closeModal()">إلغاء</button>
+            <button type="submit" class="btn-gold">حفظ الاستمارة</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
   <script src="feedback-service.js"></script>
+  <!-- Admin CRM Scripts -->
+  <script src="admin-app.js"></script>
+  <script src="admin-clients.js"></script>
+  <script src="admin-invoices.js"></script>
+  <script src="admin-contracts.js"></script>
+  <script src="admin-forms.js"></script>
   <script>
     // ── CONFIG ────────────────────────────────────────────────
-    const ADMIN_USER = 'admin';
-    const _ap = atob('YTh1NHI5bzQ='); // base64 encoded password
     const PAGE_SIZE  = 10;
-    const MAX_ATTEMPTS  = 5;
-    const LOCKOUT_MS    = 15 * 60 * 1000; // 15 minutes
-    const SESSION_MS    = 30 * 60 * 1000; // 30 minutes auto-logout
-    const SESSION_SALT  = 'auro_s3cur3';
 
     let currentFilter  = 'all';
     let reviewPage     = 1;
     let visitorPage    = 1;
-    let inactiveTimer  = null;
 
-    // ── CAPTCHA ───────────────────────────────────────────────
-    let _captchaAnswer = 0;
-    function newCaptcha() {
-      const a = Math.floor(Math.random() * 9) + 1;
-      const b = Math.floor(Math.random() * 9) + 1;
-      const ops = [['+', a+b], ['-', Math.max(a,b)-Math.min(a,b)], ['×', a*b]];
-      const pick = ops[Math.floor(Math.random() * ops.length)];
-      _captchaAnswer = pick[1];
-      document.getElementById('captcha-q').textContent = `كم ناتج ${Math.max(a,b)} ${pick[0]} ${Math.min(a,b)} ؟`;
-      document.getElementById('captcha-ans').value = '';
-    }
-    newCaptcha();
-
-    // ── LOCKOUT ───────────────────────────────────────────────
-    function getLockout() {
-      const data = JSON.parse(localStorage.getItem('auro_login_lock') || '{"attempts":0}');
-      return data;
-    }
-    function setLockout(data) { localStorage.setItem('auro_login_lock', JSON.stringify(data)); }
-    function isLocked() {
-      const d = getLockout();
-      if (d.lockedUntil && Date.now() < d.lockedUntil) return d.lockedUntil;
-      if (d.lockedUntil && Date.now() >= d.lockedUntil) { setLockout({attempts:0}); } // reset
-      return false;
-    }
-    function startLockoutTimer(until) {
-      const tick = () => {
-        const rem = until - Date.now();
-        if (rem <= 0) { location.reload(); return; }
-        const m = Math.floor(rem/60000), s = Math.floor((rem%60000)/1000);
-        document.getElementById('lockout-timer').textContent = `${m}:${String(s).padStart(2,'0')} دقيقة`;
-        setTimeout(tick, 1000);
-      };
-      document.getElementById('lockout-msg').style.display = 'block';
-      document.getElementById('login-btn').disabled = true;
-      tick();
-    }
-
-    // Check lockout on load
-    const _locked = isLocked();
-    if (_locked) startLockoutTimer(_locked);
-
-    // ── SESSION TOKEN ─────────────────────────────────────────
-    function makeToken() {
-      const raw = SESSION_SALT + Date.now() + Math.random();
-      let hash = 0;
-      for (let i = 0; i < raw.length; i++) { hash = ((hash << 5) - hash) + raw.charCodeAt(i); hash |= 0; }
-      return 'tk_' + Math.abs(hash).toString(36) + '_' + Date.now().toString(36);
-    }
-    function validateSession() {
-      const tok = sessionStorage.getItem('auro_tok');
-      const exp = parseInt(sessionStorage.getItem('auro_tok_exp') || '0');
-      return tok && tok.startsWith('tk_') && Date.now() < exp;
-    }
-    function refreshSession() {
-      sessionStorage.setItem('auro_tok_exp', Date.now() + SESSION_MS);
-    }
-
-    // ── AUTO-LOGOUT ───────────────────────────────────────────
-    function resetInactiveTimer() {
-      clearTimeout(inactiveTimer);
-      refreshSession();
-      inactiveTimer = setTimeout(() => {
-        alert('⏱️ انتهت جلستك بسبب عدم النشاط (30 دقيقة). سيتم تسجيل الخروج.');
-        logout();
-      }, SESSION_MS);
-    }
-    ['mousemove','keydown','click','scroll','touchstart'].forEach(ev =>
-      document.addEventListener(ev, resetInactiveTimer, { passive: true })
-    );
-
-    // ── AUTH INIT ─────────────────────────────────────────────
-    if (validateSession()) { showAdmin(); resetInactiveTimer(); }
-
+    // ── AUTH (Supabase Auth — real server-side session, no password stored in code) ──
     document.addEventListener('keydown', e => {
       if (e.key === 'Enter' && !document.getElementById('login-overlay').classList.contains('hidden')) doLogin();
     });
 
-    function doLogin() {
-      const locked = isLocked();
-      if (locked) { startLockoutTimer(locked); return; }
-
-      const u    = document.getElementById('username').value.trim();
-      const p    = document.getElementById('password').value;
-      const ans  = parseInt(document.getElementById('captcha-ans').value);
+    async function doLogin() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
       const errEl = document.getElementById('login-err');
+      const btn = document.getElementById('login-btn');
 
-      // CAPTCHA check
-      if (isNaN(ans) || ans !== _captchaAnswer) {
-        errEl.textContent = '⚠️ إجابة الحساب غلط';
-        newCaptcha();
-        return;
-      }
+      if (!window.sb) { errEl.textContent = '⚠️ تعذر الاتصال بالخادم.'; return; }
 
-      if (u === ADMIN_USER && p === _ap) {
-        // Success — clear lockout, store token
-        setLockout({attempts:0});
-        const tok = makeToken();
-        sessionStorage.setItem('auro_tok', tok);
-        sessionStorage.setItem('auro_tok_exp', Date.now() + SESSION_MS);
-        document.getElementById('login-btn').textContent = '✓ جاري الدخول...';
-        setTimeout(() => { showAdmin(); resetInactiveTimer(); }, 400);
-      } else {
-        // Failed attempt
-        const d = getLockout();
-        d.attempts = (d.attempts || 0) + 1;
-        if (d.attempts >= MAX_ATTEMPTS) {
-          d.lockedUntil = Date.now() + LOCKOUT_MS;
-          setLockout(d);
-          startLockoutTimer(d.lockedUntil);
-          errEl.textContent = '';
-        } else {
-          setLockout(d);
-          errEl.textContent = `⚠️ خطأ في بيانات الدخول — محاولة ${d.attempts}/${MAX_ATTEMPTS}`;
-          document.getElementById('password').value = '';
-          document.getElementById('password').focus();
-          newCaptcha();
-        }
+      btn.disabled = true;
+      btn.textContent = 'جاري الدخول...';
+      const { error } = await window.sb.auth.signInWithPassword({ email, password });
+      btn.disabled = false;
+      btn.textContent = 'دخول آمن 🔒';
+
+      if (error) {
+        errEl.textContent = '⚠️ خطأ في البريد أو كلمة المرور';
+        document.getElementById('password').value = '';
+        document.getElementById('password').focus();
       }
+      // success is handled by the AdminAuthChanged listener below (fires from onAuthStateChange)
     }
-    function logout() {
-      sessionStorage.removeItem('auro_tok');
-      sessionStorage.removeItem('auro_tok_exp');
+
+    async function logout() {
+      if (window.sb) await window.sb.auth.signOut();
       location.reload();
     }
+
     function showAdmin() {
       document.getElementById('login-overlay').classList.add('hidden');
       document.getElementById('admin-main').classList.remove('hidden');
       loadAll();
     }
+
+    // If a valid Supabase session already exists (returning within the same browser), skip the login form.
+    let _adminShown = false;
+    document.addEventListener('AdminAuthChanged', (e) => {
+      if (e.detail.loggedIn && !_adminShown) { _adminShown = true; showAdmin(); }
+    });
 
     // ── LOAD ALL ──────────────────────────────────────────────
     function loadAll() {
@@ -534,6 +771,13 @@
       loadVisitors();
       loadBookings();
     }
+
+    // Re-load once Firebase actually finishes connecting — showAdmin() can fire loadAll()
+    // before AdminApp.checkFirebase() resolves (e.g. an already-logged-in session reopening
+    // the page), which would otherwise show an empty bookings list until a manual refresh.
+    document.addEventListener('AdminDBReady', () => {
+      if (!document.getElementById('admin-main').classList.contains('hidden')) loadAll();
+    });
 
     function loadStats() {
       const stats    = FeedbackService.getVisitorStats();
@@ -681,6 +925,7 @@
             ? `<div class="rv-comment">"${escHtml(r.comment)}"</div>`
             : `<div class="rv-comment" style="opacity:0.4">— لم يُكتب تعليق —</div>`}
           <div class="rv-extra">
+            ${r.phone    ? `<span>📞 ${escHtml(r.phone)}</span>` : ''}
             ${r.location ? `<span>📍 ${escHtml(r.location)}</span>` : ''}
             ${r.device   ? `<span>${devIcon} ${escHtml(r.device)}</span>` : ''}
             ${r.referrer ? `<span>🔗 ${escHtml(r.referrer)}</span>` : ''}
@@ -802,9 +1047,17 @@
     }
 
     // ── BOOKINGS TAB ─────────────────────────────────────────
-    function loadBookings() {
-      let bookings = JSON.parse(localStorage.getItem('auro_bookings') || '[]');
-      bookings = bookings.sort((a,b) => new Date(b.date) - new Date(a.date));
+    let allBookingsData = [];
+
+    async function loadBookings() {
+      const list = document.getElementById('bookings-list');
+      if(list.children.length === 0) {
+        list.innerHTML = '<div style="text-align:center; padding:50px;">جاري تحميل الحجوزات... ⏳</div>';
+      }
+
+      let bookings = await AdminApp.getDocuments('bookings');
+      allBookingsData = bookings;
+      bookings = bookings.sort((a,b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
 
       const q = (document.getElementById('booking-search')?.value || '').toLowerCase();
       const f = document.getElementById('booking-filter')?.value || 'all';
@@ -815,22 +1068,54 @@
       );
       if (f !== 'all') bookings = bookings.filter(b => b.status === f);
 
-      // Update badge (pending count)
-      const pending = JSON.parse(localStorage.getItem('auro_bookings') || '[]').filter(b => b.status === 'pending').length;
+      const pending = allBookingsData.filter(b => b.status === 'pending').length;
       document.getElementById('bookings-badge').textContent = pending;
 
-      const list = document.getElementById('bookings-list');
+      populateImportDropdowns();
+
       list.innerHTML = '';
       if (!bookings.length) {
         list.innerHTML = `<div class="empty-state"><div class="icon">📦</div>لا توجد حجوزات بعد</div>`;
         return;
       }
       bookings.forEach(b => {
-        const date = new Date(b.date).toLocaleDateString('ar-SA', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
-        const badgeCls = b.status === 'pending' ? 'badge-pending' : b.status === 'confirmed' ? 'badge-approved' : 'badge-rejected';
-        const badgeTxt = b.status === 'pending' ? '⏳ بانتظار التأكيد' : b.status === 'confirmed' ? '✅ مؤكدة' : '✕ ملغاة';
+        const date = new Date(b.date || b.createdAt).toLocaleDateString('ar-SA', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+        let badgeCls, badgeTxt;
+        if(b.status === 'pending') { badgeCls = 'badge-pending'; badgeTxt = '⏳ قيد المراجعة'; }
+        else if(b.status === 'accepted') { badgeCls = 'badge-approved'; badgeTxt = '✅ قبول مبدئي'; }
+        else if(b.status === 'paid') { badgeCls = 'badge-approved'; badgeTxt = '💳 تم السداد'; }
+        else { badgeCls = 'badge-rejected'; badgeTxt = '✕ مرفوضة / ملغاة'; }
+
         const card = document.createElement('div');
         card.className = 'review-card-admin';
+        
+        let actionButtons = '';
+        if(b.status === 'pending') {
+          actionButtons = `
+            <button class="btn-approve" onclick="updateBooking('${b.id}','accepted')">قبول مبدئي ✅</button>
+            <button class="btn-reject"  onclick="updateBooking('${b.id}','rejected')">رفض ❌</button>
+            <button class="btn-reject"  style="margin-top:4px" onclick="deleteBooking('${b.id}')">حذف 🗑️</button>
+          `;
+        } else if(b.status === 'accepted') {
+          actionButtons = `
+            <button class="btn-approve" style="background:#0056b3;" onclick="issueInvoiceForBooking('${b.id}', 'quote')">فاتورة عرض سعر 📄</button>
+            <button class="btn-approve" style="background:#6f42c1;" onclick="issueContractForBooking('${b.id}')">إصدار عقد ✍️</button>
+            <button class="btn-approve" onclick="updateBooking('${b.id}','paid')">تم السداد 💳</button>
+            <button class="btn-reject" style="margin-top:4px" onclick="updateBooking('${b.id}','pending')">تراجع للمراجعة ⏪</button>
+          `;
+        } else if(b.status === 'paid') {
+          actionButtons = `
+            <button class="btn-approve" style="background:#198754;" onclick="issueInvoiceForBooking('${b.id}', 'final')">فاتورة ضريبية نهائية 🧾</button>
+            <button class="btn-approve" style="background:#fd7e14;" onclick="issueFormForBooking('${b.id}')">استمارة تسليم 📦</button>
+            <button class="btn-reject" style="margin-top:4px" onclick="updateBooking('${b.id}','accepted')">تراجع للقبول المبدئي ⏪</button>
+          `;
+        } else {
+          actionButtons = `
+            <button class="btn-approve" onclick="updateBooking('${b.id}','pending')">تراجع (استعادة) ⏪</button>
+            <button class="btn-reject"  onclick="deleteBooking('${b.id}')">حذف 🗑️</button>
+          `;
+        }
+
         card.innerHTML = `
           <div>
             <div class="rv-meta">
@@ -839,59 +1124,285 @@
               <span class="status-badge ${badgeCls}">${badgeTxt}</span>
             </div>
             <div class="rv-comment">
-              📦 ${escHtml(b.pkg)} • ${b.cups} كوب • ${b.price} ريال<br>
+              📦 ${escHtml(b.pkg)} • ${b.cups || '0'} كوب • ${b.price || '0'} ريال<br>
               ☕ ${escHtml(b.drinks)}<br>
               📍 ${escHtml(b.city)} • 🎉 ${escHtml(b.event)}<br>
-              📅 ${escHtml(b.eventDate)} │ ${escHtml(b.time)}
+              📅 ${escHtml(b.eventDate || b.date)} │ ${escHtml(b.time || '')}
               ${b.notes ? `<br>📝 ${escHtml(b.notes)}` : ''}
             </div>
             <div class="rv-extra">
-              <span>📱 ${escHtml(b.phone)}</span>
+              <span>📱 <a href="https://wa.me/966${(b.phone||'').replace(/^05/,'5')}" target="_blank" style="color:var(--gold)">${escHtml(b.phone)}</a></span>
             </div>
           </div>
           <div class="rv-actions">
-            <button class="btn-approve" onclick="updateBooking('${b.id}','confirmed')">✓ تأكيد</button>
-            <button class="btn-reject"  onclick="updateBooking('${b.id}','cancelled')">✕ إلغاء</button>
-            <button class="btn-reject"  style="margin-top:4px" onclick="deleteBooking('${b.id}')">🗑 حذف</button>
+            ${actionButtons}
           </div>
         `;
         list.appendChild(card);
       });
     }
 
-    function updateBooking(id, status) {
-      const bookings = JSON.parse(localStorage.getItem('auro_bookings') || '[]');
-      const i = bookings.findIndex(b => b.id === id);
-      if (i !== -1) { bookings[i].status = status; localStorage.setItem('auro_bookings', JSON.stringify(bookings)); }
-      showToast(status === 'confirmed' ? '✅ تم تأكيد الحجز' : '✕ تم إلغاء الحجز');
-      loadBookings();
+    async function updateBooking(id, status) {
+      const b = allBookingsData.find(x => x.id === id);
+      if (b) {
+        b.status = status;
+        await AdminApp.saveDocument('bookings', b);
+        showToast('✅ تم تحديث حالة الحجز');
+        loadBookings();
+      }
     }
 
-    function deleteBooking(id) {
-      if (!confirm('هل أنت متأكد من حذف هذا الحجز؟')) return;
-      let bookings = JSON.parse(localStorage.getItem('auro_bookings') || '[]');
-      bookings = bookings.filter(b => b.id !== id);
-      localStorage.setItem('auro_bookings', JSON.stringify(bookings));
+    async function deleteBooking(id) {
+      if (!confirm('هل أنت متأكد من حذف هذا الحجز نهائياً؟')) return;
+      await AdminApp.deleteDocument('bookings', id);
       showToast('🗑 تم الحذف');
       loadBookings();
     }
 
+    // Workflow Generators
+    function issueInvoiceForBooking(id, type) {
+      const b = allBookingsData.find(x => x.id === id);
+      if(!b) return;
+      document.querySelector('[data-tab="tab-invoices"]').click();
+      setTimeout(() => {
+        try {
+          AdminInvoices.openModal();
+          document.getElementById('inv-client').value = b.name || '';
+          document.getElementById('inv-phone').value = b.phone || '';
+          document.getElementById('inv-type').value = type === 'quote' ? 'quote' : 'invoice';
+          document.getElementById('inv-city').value = b.city || '';
+          
+          let dateVal = '';
+          if (b.eventDate) dateVal = b.eventDate;
+          else if (b.date && typeof b.date === 'string') dateVal = b.date.split('T')[0];
+          document.getElementById('inv-event-date').value = dateVal;
+          
+          document.getElementById('inv-event-loc').value = b.city || '';
+          document.getElementById('inv-event-type').value = b.event || '';
+          document.getElementById('inv-corner').value = b.pkg || '';
+          document.getElementById('inv-guests').value = b.cups || '';
+          document.getElementById('inv-service-val').value = b.price || 0;
+          document.getElementById('inv-notes').value = b.notes || '';
+          let invNotes = b.drinks ? ('المشروبات: ' + b.drinks) : '';
+          if (b.additions) invNotes += (invNotes ? '\n' : '') + 'إضافات: ' + b.additions;
+          document.getElementById('inv-additions').value = invNotes;
+          AdminInvoices.calculateTotal();
+        } catch(e) {
+          console.error("Error pre-filling invoice:", e);
+        }
+      }, 300);
+    }
+
+    function issueContractForBooking(id) {
+      const b = allBookingsData.find(x => x.id === id);
+      if(!b) return;
+      document.querySelector('[data-tab="tab-contracts"]').click();
+      setTimeout(() => {
+        AdminContracts.openModal();
+        document.getElementById('contract-client').value = b.name || '';
+        document.getElementById('contract-phone').value = b.phone || '';
+        document.getElementById('contract-city').value = b.city || '';
+        document.getElementById('contract-event-type').value = b.event || '';
+        document.getElementById('contract-event-date').value = b.eventDate || b.date.split('T')[0];
+        document.getElementById('contract-event-time').value = b.time || '';
+        document.getElementById('contract-event-loc').value = b.city || '';
+        document.getElementById('contract-corner').value = b.pkg || '';
+        document.getElementById('contract-guests').value = b.cups || '';
+        document.getElementById('contract-service-val').value = b.price || 0;
+        let conNotes = b.drinks ? ('المشروبات المتفق عليها: ' + b.drinks) : '';
+        if (b.additions) conNotes += (conNotes ? '\n' : '') + 'إضافات: ' + b.additions;
+        if (b.notes) conNotes += (conNotes ? '\n' : '') + 'ملاحظات: ' + b.notes;
+        document.getElementById('contract-additions').value = conNotes;
+        AdminContracts.calculateTotal();
+      }, 300);
+    }
+
+    function issueFormForBooking(id) {
+      const b = allBookingsData.find(x => x.id === id);
+      if(!b) return;
+      document.querySelector('[data-tab="tab-forms"]').click();
+      setTimeout(() => {
+        AdminForms.openModal();
+        document.getElementById('form-order-id').value = b.id || '';
+        document.getElementById('form-client').value = b.name || '';
+        document.getElementById('form-phone').value = b.phone || '';
+        document.getElementById('form-event-date').value = b.eventDate || b.date.split('T')[0];
+        document.getElementById('form-event-loc').value = b.city || '';
+        document.getElementById('form-corner').value = b.pkg || '';
+        document.getElementById('form-notes').value = b.notes || '';
+        
+        AdminForms.items = [{ name: 'معدات ' + b.pkg, condition: 'good', qty: 1 }];
+        AdminForms.renderItems();
+      }, 300);
+    }
+
+    // Export CSV from Firebase data
     function exportBookingsCSV() {
-      const bookings = JSON.parse(localStorage.getItem('auro_bookings') || '[]');
-      const headers = ['تاريخ الاستلام','الاسم','الجوال','المدينة','الباقة','الأكواب','السعر','المشروبات','المناسبة','تاريخ المناسبة','الوقت','الحالة','ملاحظات'];
+      const bookings = allBookingsData || [];
+      if (bookings.length === 0) return alert("لا توجد حجوزات للتصدير");
+      
+      const headers = ['تاريخ الطلب','الاسم','الجوال','المدينة','الباقة','عدد الأكواب','المبلغ','المشروبات','الإضافات','تاريخ المناسبة','الوقت','الفعالية','ملاحظات'];
       const rows = bookings.map(b => [
         new Date(b.date).toLocaleString('ar-SA'),
-        b.name, b.phone, b.city, b.pkg, b.cups, b.price, b.drinks,
-        b.event, b.eventDate, b.time,
-        b.status === 'pending' ? 'بانتظار' : b.status === 'confirmed' ? 'مؤكدة' : 'ملغاة',
-        b.notes || '—'
+        b.name, b.phone, b.city, b.pkg, b.cups, b.price, b.drinks, b.additions || 'بدون إضافات',
+        b.eventDate, b.eventTime, b.event, b.notes
       ]);
       const csv = [headers,...rows].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
       const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = `auro_bookings_${Date.now()}.csv`; a.click();
+      document.body.appendChild(a);
+      a.href = url;
+      a.download = `auro_bookings_${Date.now()}.csv`;
+      a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    }
+
+    // Backup entire database to JSON
+    async function backupDatabase() {
+      showToast('جاري تجهيز النسخة الاحتياطية...', 'info');
+      try {
+        const collections = ['bookings', 'invoices', 'contracts', 'forms', 'reviews', 'visitors'];
+        const backupData = {};
+        
+        for (const col of collections) {
+          backupData[col] = await AdminApp.getDocuments(col);
+        }
+        
+        const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const dateStr = new Date().toISOString().split('T')[0];
+        a.download = `AURO_Backup_${dateStr}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('تم تحميل النسخة الاحتياطية بنجاح ✓', 'success');
+      } catch (e) {
+        console.error("Backup failed", e);
+        alert("فشل إنشاء النسخة الاحتياطية. تأكد من الاتصال بقاعدة البيانات.");
+      }
+    }
+
+    // Dropdown Import Generators
+    function populateImportDropdowns() {
+      const invSelect = document.getElementById('inv-import-booking');
+      const conSelect = document.getElementById('con-import-booking');
+      const formSelect = document.getElementById('form-import-booking');
+      
+      let options = '<option value="">-- تعبئة يدوية (بدون استيراد) --</option>';
+      allBookingsData.forEach(b => {
+          const dateStr = b.eventDate || (typeof b.date === 'string' ? b.date.split('T')[0] : '');
+          options += `<option value="${b.id}">${b.name} - ${dateStr} (${b.pkg})</option>`;
+      });
+
+      if(invSelect) invSelect.innerHTML = options;
+      if(conSelect) conSelect.innerHTML = options;
+      if(formSelect) formSelect.innerHTML = options;
+    }
+
+    async function wipeDatabase(type) {
+      const msg = type === 'all' ? 'هل أنت متأكد من مسح جميع البيانات نهائياً؟ هذا الإجراء لا يمكن التراجع عنه!' : 'هل أنت متأكد من مسح سجل ' + type + '؟';
+      if (!confirm(msg)) return;
+      if (!confirm('تأكيد نهائي: هل أنت متأكد؟')) return;
+
+      showToast('جاري مسح البيانات السحابية...');
+      
+      try {
+        if (window.sb) {
+           const cols = type === 'all' ? ['bookings','invoices','contracts','forms','reviews','visitors','clients'] : [type];
+           for (const col of cols) await window.sb.from(col).delete().neq('id', '__never__');
+        }
+        showToast('تم مسح البيانات بنجاح', 'success');
+        setTimeout(() => location.reload(), 1500);
+      } catch (e) {
+        console.error("Wipe error", e);
+        alert("فشل مسح البيانات من السحابة.");
+      }
+    }
+
+    function importBookingToInvoice(id) {
+      if(!id) return;
+      const b = allBookingsData.find(x => x.id === id);
+      if(!b) return;
+      
+      try {
+        document.getElementById('inv-client').value = b.name || '';
+        document.getElementById('inv-phone').value = b.phone || '';
+        document.getElementById('inv-city').value = b.city || '';
+        
+        let dateVal = '';
+        if (b.eventDate) dateVal = b.eventDate;
+        else if (b.date && typeof b.date === 'string') dateVal = b.date.split('T')[0];
+        document.getElementById('inv-event-date').value = dateVal;
+        
+        document.getElementById('inv-event-loc').value = b.city || '';
+        document.getElementById('inv-event-type').value = b.event || '';
+        document.getElementById('inv-corner').value = b.pkg || '';
+        document.getElementById('inv-guests').value = b.cups || '';
+        document.getElementById('inv-service-val').value = b.price || 0;
+        document.getElementById('inv-notes').value = b.notes || '';
+        let invNotes2 = b.drinks ? ('المشروبات: ' + b.drinks) : '';
+        if (b.additions) invNotes2 += (invNotes2 ? '\n' : '') + 'إضافات: ' + b.additions;
+        document.getElementById('inv-additions').value = invNotes2;
+        AdminInvoices.calculateTotal();
+      } catch(e) { console.error(e); }
+    }
+
+    function importBookingToContract(id) {
+      if(!id) return;
+      const b = allBookingsData.find(x => x.id === id);
+      if(!b) return;
+
+      try {
+        document.getElementById('contract-client').value = b.name || '';
+        document.getElementById('contract-phone').value = b.phone || '';
+        document.getElementById('contract-city').value = b.city || '';
+        document.getElementById('contract-event-type').value = b.event || '';
+        
+        let dateVal = '';
+        if (b.eventDate) dateVal = b.eventDate;
+        else if (b.date && typeof b.date === 'string') dateVal = b.date.split('T')[0];
+        document.getElementById('contract-event-date').value = dateVal;
+        
+        document.getElementById('contract-event-time').value = b.time || '';
+        document.getElementById('contract-event-loc').value = b.city || '';
+        document.getElementById('contract-corner').value = b.pkg || '';
+        document.getElementById('contract-guests').value = b.cups || '';
+        document.getElementById('contract-service-val').value = b.price || 0;
+        let conNotes2 = b.drinks ? ('المشروبات المتفق عليها: ' + b.drinks) : '';
+        if (b.additions) conNotes2 += (conNotes2 ? '\n' : '') + 'إضافات: ' + b.additions;
+        if (b.notes) conNotes2 += (conNotes2 ? '\n' : '') + 'ملاحظات: ' + b.notes;
+        document.getElementById('contract-additions').value = conNotes2;
+        AdminContracts.calculateTotal();
+      } catch(e) { console.error(e); }
+    }
+
+    function importBookingToForm(id) {
+      if(!id) return;
+      const b = allBookingsData.find(x => x.id === id);
+      if(!b) return;
+
+      try {
+        document.getElementById('form-order-id').value = b.id || '';
+        document.getElementById('form-client').value = b.name || '';
+        document.getElementById('form-phone').value = b.phone || '';
+        
+        let dateVal = '';
+        if (b.eventDate) dateVal = b.eventDate;
+        else if (b.date && typeof b.date === 'string') dateVal = b.date.split('T')[0];
+        document.getElementById('form-event-date').value = dateVal;
+        
+        document.getElementById('form-event-loc').value = b.city || '';
+        document.getElementById('form-corner').value = b.pkg || '';
+        document.getElementById('form-notes').value = b.notes || '';
+        
+        AdminForms.items = [{ name: 'معدات ' + b.pkg, condition: 'good', qty: 1 }];
+        AdminForms.renderItems();
+      } catch(e) { console.error(e); }
     }
 
     // ── SETTINGS ──────────────────────────────────────────────
@@ -901,10 +1412,9 @@
         : 'سيتم حذف كل التقييمات نهائياً. هل أنت متأكد؟';
       if (!confirm(msg)) return;
 
-      if (window.AURO_DB) {
+      if (window.sb) {
          try {
-           const snap = await window.AURO_DB.collection(type).get();
-           snap.forEach(doc => { doc.ref.delete() });
+           await window.sb.from(type).delete().neq('id', '__never__');
          } catch(e) {}
       }
 
@@ -915,12 +1425,17 @@
     }
 
     // ── TABS ──────────────────────────────────────────────────
+    // The new logic uses TabChanged event, but we keep this for backwards compatibility
     function showTab(name) {
-      ['overview','reviews','bookings','visitors','settings'].forEach(t => {
-        document.getElementById('tab-' + t).classList.toggle('hidden', t !== name);
-        document.getElementById('tab-btn-' + t).classList.toggle('active', t === name);
-      });
-      if (name === 'bookings') loadBookings();
+      if(window.AdminApp) {
+        document.querySelector(`.nav-item[data-tab="tab-${name}"]`)?.click();
+      } else {
+        ['overview','reviews','bookings','visitors','settings'].forEach(t => {
+          document.getElementById('tab-' + t).classList.toggle('hidden', t !== name);
+          document.getElementById('tab-btn-' + t)?.classList.toggle('active', t === name);
+        });
+        if (name === 'bookings') loadBookings();
+      }
     }
 
     // ── PAGINATION ────────────────────────────────────────────

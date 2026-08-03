@@ -89,6 +89,7 @@
   <!-- Background -->
   <div id="bg-slideshow"></div>
   <div id="bg-overlay"></div>
+  <canvas id="bg-particles"></canvas>
   <div class="orb orb-1"></div>
   <div class="orb orb-2"></div>
 
@@ -109,10 +110,10 @@
 
   <!-- Lightbox -->
   <div class="lightbox" id="lightbox" onclick="lbClose(event)">
-    <div class="lb-close" onclick="lbClose()">✕</div>
-    <div class="lb-prev lb-nav" onclick="lbNav(-1)">›</div>
-    <img id="lb-img" src="" alt="" />
-    <div class="lb-next lb-nav" onclick="lbNav(1)">‹</div>
+    <button type="button" class="lb-close" onclick="lbClose()" aria-label="إغلاق">✕</button>
+    <button type="button" class="lb-prev lb-nav" onclick="lbNav(-1)" aria-label="الصورة السابقة">›</button>
+    <img id="lb-img" src="" alt="صورة من أعمال AURO" />
+    <button type="button" class="lb-next lb-nav" onclick="lbNav(1)" aria-label="الصورة التالية">‹</button>
   </div>
 
   <!-- NAV -->
@@ -129,9 +130,9 @@
       <a href="#policies">السياسات</a>
       <a href="#contact">تواصل</a>
     </div>
-    <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+    <button type="button" class="hamburger" id="hamburger" onclick="toggleMenu()" aria-expanded="false" aria-controls="mobileNav" aria-label="فتح القائمة">
       <span></span><span></span><span></span>
-    </div>
+    </button>
   </nav>
   <div class="mobile-nav" id="mobileNav">
     <a href="#hero" onclick="closeMenu()">الرئيسية</a>
@@ -162,6 +163,7 @@
         <span>اكتشف</span>
         <div class="scroll-arrow"></div>
       </div>
+    </div>
   </section>
 
   <!-- STATS -->
@@ -186,7 +188,7 @@
   <section id="how-it-works">
     <div class="section-header reveal">
       <span class="section-tag">رحلتك معنا</span>
-      <h2 class="section-title">كيف <span style="color:var(--gold)">نشتغل؟</span></h2>
+      <h2 class="section-title">كيف <span class="text-gold">نشتغل؟</span></h2>
     </div>
     <div class="hiw-timeline">
       <div class="hiw-line" id="hiw-line"></div>
@@ -223,7 +225,7 @@
         <div class="hiw-number">04</div>
       </div>
     </div>
-    <div style="text-align:center;margin-top:52px" class="reveal reveal-delay-3">
+    <div class="section-cta reveal reveal-delay-3">
       <a href="booking.html" class="btn-primary">ابدأ الحجز الآن ✨</a>
     </div>
   </section>
@@ -232,18 +234,16 @@
   <section id="gallery" class="reveal">
     <div class="section-header">
       <span class="section-tag">أبعاد أورو</span>
-      <h2 class="section-title">عدسة <span style="color:var(--gold)">الفخامة</span></h2>
+      <h2 class="section-title">عدسة <span class="text-gold">الفخامة</span></h2>
     </div>
     <div class="cards-stack-container">
       <div class="cards-stack" id="cards-stack">
-        <div class="stack-card" style="background-image: url('bg1.png');"></div>
-        <div class="stack-card" style="background-image: url('bg2.png');"></div>
-        <div class="stack-card" style="background-image: url('bg3.png');"></div>
-        <div class="stack-card" style="background-image: url('bg4.png');"></div>
-        <div class="stack-card" style="background-image: url('bg5.png');"></div>
-        <div class="stack-card" style="background-image: url('bg6.png');"></div>
-        <div class="stack-card" style="background-image: url('bg7.png');"></div>
-        <div class="stack-card" style="background-image: url('bg8.png');"></div>
+        <div class="stack-card"><img src="aurobg1.webp" alt="صورة من فعاليات AURO" loading="eager" fetchpriority="high" decoding="async" /></div>
+        <div class="stack-card"><img src="aurobg2.webp" alt="صورة من فعاليات AURO" loading="lazy" decoding="async" /></div>
+        <div class="stack-card"><img src="aurobg3.webp" alt="صورة من فعاليات AURO" loading="lazy" decoding="async" /></div>
+        <div class="stack-card"><img src="aurobg4.webp" alt="صورة من فعاليات AURO" loading="lazy" decoding="async" /></div>
+        <div class="stack-card"><img src="aurobg5.webp" alt="صورة من فعاليات AURO" loading="lazy" decoding="async" /></div>
+        <div class="stack-card"><img src="aurobg6.webp" alt="صورة من فعاليات AURO" loading="lazy" decoding="async" /></div>
       </div>
       <div class="stack-controls">
         <button id="stack-next" class="rv-btn" aria-label="التالي">›</button>
@@ -257,7 +257,7 @@
   <section id="reviews" class="reveal">
     <div class="section-header">
       <span class="section-tag">أصداء أورو</span>
-      <h2 class="section-title">قالوا عن <span style="color:var(--gold)">تجربتهم</span></h2>
+      <h2 class="section-title">قالوا عن <span class="text-gold">تجربتهم</span></h2>
     </div>
 
     <div class="rv-spotlight">
@@ -273,7 +273,7 @@
       </div>
     </div>
 
-    <div style="text-align:center; margin-top: 24px;">
+    <div class="section-cta--tight">
       <a href="feedback.html" class="btn-outline rv-cta">شاركنا رأيك ✦</a>
     </div>
   </section>
@@ -283,49 +283,63 @@
   <section id="packages">
     <div class="section-header reveal">
       <span class="section-tag">باقاتنا</span>
-      <h2 class="section-title">باقات <span style="color:var(--gold)">AURO</span></h2>
+      <h2 class="section-title">باقات <span class="text-gold">AURO</span></h2>
       <p class="section-subtitle">كل باقة صُمِّمت بعناية لتناسب مناسبتك</p>
     </div>
     <div class="packages-grid">
-      <div class="pkg-card reveal">
+      <div class="pkg-card pkg-card--display reveal">
         <div class="pkg-icon">☕</div>
         <div class="pkg-name">الذهبية</div>
-        <div class="pkg-cups">20 <span>كوب</span></div>
-        <div class="pkg-price">٣٥٠ <span>ريال</span> <em class="pkg-deposit">+ ٥٠٠ تأمين</em></div>
+        <div class="pkg-cups">20-35 <span>كوب</span></div>
+        <div class="pkg-price">٤٥٠ <span>ريال</span> <em class="pkg-deposit">+ ٥٠٠ تأمين</em></div>
         <div class="pkg-desc">مثالية للجمعات والمناسبات الخاصة</div>
+        <div class="pkg-divider"></div>
         <div class="pkg-features">
-          <div class="pkg-feature">الركن الخشبي الفاخر</div>
-          <div class="pkg-feature">حافظة ثلج</div>
+          <div class="pkg-feature">الركن الخشبي والأكواب</div>
+          <div class="pkg-feature">ترمس واحد وحافظة ثلج</div>
           <div class="pkg-feature">مشروب واحد مختار</div>
         </div>
         <a href="booking.html?pkg=gold" class="btn-primary pkg-book-btn">احجز الآن</a>
       </div>
-      <div class="pkg-card featured reveal reveal-delay-1">
+      <div class="pkg-card pkg-card--display featured reveal reveal-delay-1">
         <div class="pkg-icon">✨</div>
-        <div class="pkg-name" style="color:var(--gold)">البلاتينية</div>
-        <div class="pkg-cups">40 <span>كوب</span></div>
-        <div class="pkg-price">٤٥٠ <span>ريال</span> <em class="pkg-deposit">+ ٥٠٠ تأمين</em></div>
+        <div class="pkg-name text-gold">البلاتينية</div>
+        <div class="pkg-cups">40-70 <span>كوب</span></div>
+        <div class="pkg-price">٦٥٠ <span>ريال</span> <em class="pkg-deposit">+ ٥٠٠ تأمين</em></div>
         <div class="pkg-desc">للمناسبات الأنيقة والمتوسطة</div>
+        <div class="pkg-divider"></div>
         <div class="pkg-features">
-          <div class="pkg-feature">الركن الخشبي الفاخر</div>
-          <div class="pkg-feature">حافظة ثلج</div>
+          <div class="pkg-feature">الركن الخشبي والأكواب</div>
+          <div class="pkg-feature">ترمسان وحافظة ثلج</div>
           <div class="pkg-feature">مشروبان مختاران</div>
         </div>
         <a href="booking.html?pkg=platinum" class="btn-primary pkg-book-btn">احجز الآن</a>
       </div>
-      <div class="pkg-card reveal reveal-delay-2">
+      <div class="pkg-card pkg-card--display reveal reveal-delay-2">
         <div class="pkg-icon">👑</div>
         <div class="pkg-name">الملكية</div>
-        <div class="pkg-cups">60 <span>كوب</span></div>
-        <div class="pkg-price">٥٥٠ <span>ريال</span> <em class="pkg-deposit">+ ٥٠٠ تأمين</em></div>
+        <div class="pkg-cups">60-100 <span>كوب</span></div>
+        <div class="pkg-price">٨٥٠ <span>ريال</span> <em class="pkg-deposit">+ ٥٠٠ تأمين</em></div>
         <div class="pkg-desc">لحفلاتكم الكبرى والمناسبات الرسمية</div>
+        <div class="pkg-divider"></div>
         <div class="pkg-features">
-          <div class="pkg-feature">الركن الخشبي الفاخر</div>
-          <div class="pkg-feature">حافظة ثلج</div>
+          <div class="pkg-feature">الركن الخشبي والأكواب</div>
+          <div class="pkg-feature">٣ ترامس وحافظة ثلج</div>
           <div class="pkg-feature">ثلاثة مشروبات مختارة</div>
         </div>
         <a href="booking.html?pkg=royal" class="btn-primary pkg-book-btn">احجز الآن</a>
       </div>
+    </div>
+    
+    <div class="additions-card reveal">
+      <h3>✨ إضافات اختيارية:</h3>
+      <div class="additions-row">
+        <div>🎈 زينة تخرج / عيد / مناسبة (+١٠٠ ريال)</div>
+        <div>💁‍♀️ عاملة ضيافة (+٢٠٠ ريال)</div>
+      </div>
+      <p class="additions-note">
+        📍 الخدمة تشمل مدن: الدمام — الخبر — الظهران
+      </p>
     </div>
   </section>
 
@@ -335,54 +349,59 @@
   <section id="faq">
     <div class="section-header reveal">
       <span class="section-tag">كل ما تحتاج معرفته</span>
-      <h2 class="section-title">الأسئلة <span style="color:var(--gold)">الشائعة</span></h2>
+      <h2 class="section-title">الأسئلة <span class="text-gold">الشائعة</span></h2>
     </div>
     <div class="faq-wrap">
       <div class="faq-item reveal">
-        <div class="faq-q" onclick="toggleFAQ(this)">
+        <button type="button" class="faq-q" onclick="toggleFAQ(this)" aria-expanded="false" aria-controls="faq-a-1">
+          <div class="faq-number">01</div>
           <h3>ما هي المناطق التي يغطيها AURO؟</h3>
-          <div class="faq-icon-btn">+</div>
-        </div>
-        <div class="faq-a">
+          <div class="faq-icon-btn"><span class="faq-icon-bar faq-icon-bar--h"></span><span class="faq-icon-bar faq-icon-bar--v"></span></div>
+        </button>
+        <div class="faq-a" id="faq-a-1">
           <div class="faq-a-inner">نخدم حالياً مدن الدمام، الخبر، والظهران في المنطقة الشرقية. ونتطلع للتوسع لمناطق أخرى
             قريباً.</div>
         </div>
       </div>
       <div class="faq-item reveal reveal-delay-1">
-        <div class="faq-q" onclick="toggleFAQ(this)">
+        <button type="button" class="faq-q" onclick="toggleFAQ(this)" aria-expanded="false" aria-controls="faq-a-2">
+          <div class="faq-number">02</div>
           <h3>كم تستغرق مدة الخدمة؟</h3>
-          <div class="faq-icon-btn">+</div>
-        </div>
-        <div class="faq-a">
+          <div class="faq-icon-btn"><span class="faq-icon-bar faq-icon-bar--h"></span><span class="faq-icon-bar faq-icon-bar--v"></span></div>
+        </button>
+        <div class="faq-a" id="faq-a-2">
           <div class="faq-a-inner">مدة بقاء الركن 5 ساعات متواصلة، أو حتى نفاد كمية الأكواب المتفق عليها في الباقة،
             أيهما أسبق.</div>
         </div>
       </div>
       <div class="faq-item reveal reveal-delay-2">
-        <div class="faq-q" onclick="toggleFAQ(this)">
+        <button type="button" class="faq-q" onclick="toggleFAQ(this)" aria-expanded="false" aria-controls="faq-a-3">
+          <div class="faq-number">03</div>
           <h3>هل يمكن طلب أكواب إضافية أثناء المناسبة؟</h3>
-          <div class="faq-icon-btn">+</div>
-        </div>
-        <div class="faq-a">
+          <div class="faq-icon-btn"><span class="faq-icon-bar faq-icon-bar--h"></span><span class="faq-icon-bar faq-icon-bar--v"></span></div>
+        </button>
+        <div class="faq-a" id="faq-a-3">
           <div class="faq-a-inner">يُفضَّل تأكيد العدد قبل الموعد بـ 24 ساعة. يمكن التواصل مع الفريق الميداني وسنبذل
             قصارى جهدنا لتلبية الطلب حسب التوفر.</div>
         </div>
       </div>
       <div class="faq-item reveal">
-        <div class="faq-q" onclick="toggleFAQ(this)">
+        <button type="button" class="faq-q" onclick="toggleFAQ(this)" aria-expanded="false" aria-controls="faq-a-4">
+          <div class="faq-number">04</div>
           <h3>ماذا تشمل باقة التأجير؟</h3>
-          <div class="faq-icon-btn">+</div>
-        </div>
-        <div class="faq-a">
+          <div class="faq-icon-btn"><span class="faq-icon-bar faq-icon-bar--h"></span><span class="faq-icon-bar faq-icon-bar--v"></span></div>
+        </button>
+        <div class="faq-a" id="faq-a-4">
           <div class="faq-a-inner">تشمل الباقة: ركن اورو، الأكواب المختارة، المشروبات المختارة، وحافظة ثلج.</div>
         </div>
       </div>
       <div class="faq-item reveal reveal-delay-1">
-        <div class="faq-q" onclick="toggleFAQ(this)">
+        <button type="button" class="faq-q" onclick="toggleFAQ(this)" aria-expanded="false" aria-controls="faq-a-5">
+          <div class="faq-number">05</div>
           <h3>متى يصل الفريق للتجهيز؟</h3>
-          <div class="faq-icon-btn">+</div>
-        </div>
-        <div class="faq-a">
+          <div class="faq-icon-btn"><span class="faq-icon-bar faq-icon-bar--h"></span><span class="faq-icon-bar faq-icon-bar--v"></span></div>
+        </button>
+        <div class="faq-a" id="faq-a-5">
           <div class="faq-a-inner">يلتزم فريق AURO بالوصول قبل موعد المناسبة بـ 30 إلى 60 دقيقة لضمان التجهيز الكامل
             واستقبال ضيوفك بأفضل صورة.</div>
         </div>
@@ -394,10 +413,10 @@
   <section id="policies">
     <div class="section-header reveal">
       <span class="section-tag">الشفافية أساس الثقة</span>
-      <h2 class="section-title">السياسات <span style="color:var(--gold)">والشروط</span></h2>
+      <h2 class="section-title">السياسات <span class="text-gold">والشروط</span></h2>
     </div>
-    <div class="policy-card reveal" style="margin-bottom:24px">
-      <h3 style="color:var(--gold);font-size:1.3rem;margin-bottom:28px;font-weight:700">سياسة الحجز والإلغاء</h3>
+    <div class="policy-card reveal">
+      <h3 class="policy-title">سياسة الحجز والإلغاء</h3>
       <div class="policy-item">
         <h4>تأكيد الحجز</h4>
         <p>لا يعتبر الحجز مؤكداً إلا بعد دفع المبلغ كاملاً.</p>
@@ -416,7 +435,7 @@
       </div>
     </div>
     <div class="policy-card reveal">
-      <h3 style="color:var(--gold);font-size:1.3rem;margin-bottom:28px;font-weight:700">الشروط والأحكام</h3>
+      <h3 class="policy-title">الشروط والأحكام</h3>
       <div class="policy-item">
         <h4>المكان والخدمة</h4>
         <p>يلتزم العميل بتوفير مساحة مناسبة للركن ومصدر كهرباء قريب عند الحاجة.</p>
@@ -442,11 +461,12 @@
   <section id="contact">
     <div class="section-header reveal">
       <span class="section-tag">نحن هنا دائماً</span>
-      <h2 class="section-title">تواصل <span style="color:var(--gold)">معنا</span></h2>
+      <h2 class="section-title">تواصل <span class="text-gold">معنا</span></h2>
       <p class="section-subtitle">فريقنا جاهز للإجابة على جميع استفساراتك</p>
     </div>
     <div class="social-grid reveal">
       <a href="https://wa.me/966579383960" target="_blank" class="contact-card whatsapp">
+        <span class="card-arrow">↗</span>
         <div class="card-icon">
           <svg width="28" height="28" viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg">
             <path fill="currentColor"
@@ -459,6 +479,7 @@
         </div>
       </a>
       <a href="https://instagram.com/Auro.ksa" target="_blank" class="contact-card instagram">
+        <span class="card-arrow">↗</span>
         <div class="card-icon">
           <svg width="28" height="28" viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg">
             <path fill="currentColor"
@@ -471,6 +492,7 @@
         </div>
       </a>
       <a href="https://tiktok.com/@auro.ksa" target="_blank" class="contact-card tiktok">
+        <span class="card-arrow">↗</span>
         <div class="card-icon">
           <svg width="28" height="28" viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg">
             <path fill="currentColor"
@@ -483,6 +505,7 @@
         </div>
       </a>
       <a href="https://x.com/auroksa" target="_blank" class="contact-card twitter">
+        <span class="card-arrow">↗</span>
         <div class="card-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path fill="currentColor"
@@ -495,6 +518,7 @@
         </div>
       </a>
       <a href="mailto:auro.ksa@gmail.com" class="contact-card email">
+        <span class="card-arrow">↗</span>
         <div class="card-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
@@ -514,7 +538,7 @@
   <footer>
     <img src="favicon.png" class="footer-logo" alt="AURO" />
     <p class="footer-text">AURO · ركن قهوة اورو · 2026</p>
-    <p class="footer-text" style="margin-top:8px;letter-spacing:2px">المنطقة الشرقية · المملكة العربية السعودية</p>
+    <p class="footer-text footer-text--spaced">المنطقة الشرقية · المملكة العربية السعودية</p>
   </footer>
 
   <!-- Audio Control -->
@@ -540,6 +564,8 @@
     </svg>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
   <script src="feedback-service.js"></script>
   <script src="script.js"></script>
 </body>
