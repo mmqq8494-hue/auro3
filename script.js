@@ -419,16 +419,18 @@ window.addEventListener('scroll', () => {
     }
 }, { passive: true });
 
-// ── REVIEWS COVERFLOW (center card + peeking sides; click/dots/arrows/keyboard) ──
+// ── REVIEWS AUTO-CROSSFADE ──────────────────────────────────
+// Cycling is driven entirely by a CSS @keyframes animation (generated below with
+// per-review timing) — there is no setInterval/setTimeout driving the rotation
+// itself, so it cannot be affected by JS timer throttling/suspension in any
+// browser context. Each card gets the same animation with a staggered negative
+// animation-delay, so they take turns being the one visible card.
 function loadReviewsTicker() {
     const stage = document.getElementById('reviews-track');
     if (!stage) return;
 
     if (typeof FeedbackService === 'undefined') { setTimeout(loadReviewsTicker, 150); return; }
     FeedbackService.init();
-
-    if (window._reviewTimer)      { clearInterval(window._reviewTimer); window._reviewTimer = null; }
-    if (window._reviewKeyHandler) { document.removeEventListener('keydown', window._reviewKeyHandler); window._reviewKeyHandler = null; }
 
     function escHtml(s) {
         return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -437,20 +439,16 @@ function loadReviewsTicker() {
     const approved  = FeedbackService.getReviews('approved');
     const emptyWrap = document.getElementById('reviews-empty-wrap');
     const carousel  = document.getElementById('rv-carousel');
-    const dotsEl    = document.getElementById('rv-dots');
 
     stage.innerHTML = '';
-    if (dotsEl) dotsEl.innerHTML = '';
 
     if (!approved || !approved.length) {
         if (emptyWrap) emptyWrap.style.display = '';
         if (carousel)  carousel.style.display = 'none';
-        if (dotsEl)    dotsEl.style.display = 'none';
         return;
     }
     if (emptyWrap) emptyWrap.style.display = 'none';
     if (carousel)  carousel.style.display = '';
-    if (dotsEl)    dotsEl.style.display = '';
 
     const cards = approved.map(r => {
         const rating = Math.min(5, Math.max(0, parseInt(r.rating) || 5));
@@ -476,73 +474,37 @@ function loadReviewsTicker() {
     });
 
     const n = cards.length;
-    let active = 0;
+    const PER_CARD_SECONDS = 4;
 
-    function mod(a, m) { return ((a % m) + m) % m; }
-
-    // RTL layout: visually-right side shows "next" content (i+1), visually-left shows "prev" (i-1)
-    function render() {
-        cards.forEach((card, i) => {
-            const diff = mod(i - active + Math.floor(n / 2), n) - Math.floor(n / 2);
-            let pos, tx, scale;
-            if (diff === 0)       { pos = 'center'; tx = 0;   scale = 1; }
-            else if (diff === -1) { pos = 'right';  tx = 58;  scale = .84; }
-            else if (diff === 1)  { pos = 'left';   tx = -58; scale = .84; }
-            else if (diff === -2) { pos = 'hidden'; tx = 108; scale = .7; }
-            else                  { pos = 'hidden'; tx = -108; scale = .7; }
-            card.dataset.pos = pos;
-            card.style.transform = `translate3d(calc(50% + ${tx}%), -50%, 0) scale(${scale})`;
-        });
-        if (dotsEl) Array.from(dotsEl.children).forEach((d, i) => d.classList.toggle('active', i === active));
+    if (n === 1) {
+        cards[0].style.animation = 'none';
+        cards[0].style.opacity = '1';
+        return;
     }
 
-    function setActive(i) { active = mod(i, n); render(); restartAutoplay(); }
-    function go(delta) { setActive(active + delta); }
+    const slot = 100 / n;
+    const fade = Math.min(slot * 0.25, 3);
+    const keyframesCSS = `@keyframes rvCardCycle {
+        0% { opacity: 0; }
+        ${fade}% { opacity: 1; }
+        ${slot - fade}% { opacity: 1; }
+        ${slot}% { opacity: 0; }
+        100% { opacity: 0; }
+    }`;
 
-    cards.forEach(card => {
-        card.addEventListener('click', () => {
-            if (card.dataset.pos === 'left') go(1);
-            else if (card.dataset.pos === 'right') go(-1);
-        });
+    let styleTag = document.getElementById('rv-keyframes-style');
+    if (!styleTag) {
+        styleTag = document.createElement('style');
+        styleTag.id = 'rv-keyframes-style';
+        document.head.appendChild(styleTag);
+    }
+    styleTag.textContent = keyframesCSS;
+
+    const totalDuration = n * PER_CARD_SECONDS;
+    cards.forEach((card, i) => {
+        card.style.animationDuration = totalDuration + 's';
+        card.style.animationDelay = (-(i * PER_CARD_SECONDS)) + 's';
     });
-
-    if (dotsEl && n > 1) {
-        cards.forEach((_, i) => {
-            const dot = document.createElement('button');
-            dot.className = 'rv-dot';
-            dot.setAttribute('aria-label', `التقييم ${i + 1}`);
-            dot.onclick = () => setActive(i);
-            dotsEl.appendChild(dot);
-        });
-    }
-
-    function restartAutoplay() {
-        clearInterval(window._reviewTimer);
-        if (n > 1) {
-            window._reviewTimer = setInterval(() => {
-                if (n === 2) { go(1); return; }
-                let next;
-                do { next = Math.floor(Math.random() * n); } while (next === active);
-                setActive(next);
-            }, 4000);
-        }
-    }
-
-    // Deliberately no hover-pause: a resting cursor over the section (very likely
-    // while someone is just watching it) must never be able to freeze autoplay.
-    const section = stage.closest('#reviews');
-
-    window._reviewKeyHandler = (e) => {
-        if (!section) return;
-        const rect = section.getBoundingClientRect();
-        if (!(rect.top < window.innerHeight && rect.bottom > 0)) return;
-        if (e.key === 'ArrowRight') go(-1);
-        if (e.key === 'ArrowLeft') go(1);
-    };
-    document.addEventListener('keydown', window._reviewKeyHandler);
-
-    render();
-    restartAutoplay();
 }
 
 if (document.readyState === 'loading') {
