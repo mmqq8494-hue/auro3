@@ -528,11 +528,9 @@ function loadReviewsTicker() {
         }
     }
 
+    // Deliberately no hover-pause: a resting cursor over the section (very likely
+    // while someone is just watching it) must never be able to freeze autoplay.
     const section = stage.closest('#reviews');
-    if (section) {
-        section.addEventListener('mouseenter', () => clearInterval(window._reviewTimer));
-        section.addEventListener('mouseleave', restartAutoplay);
-    }
 
     window._reviewKeyHandler = (e) => {
         if (!section) return;
