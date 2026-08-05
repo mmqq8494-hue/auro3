@@ -438,8 +438,6 @@ function loadReviewsTicker() {
     const emptyWrap = document.getElementById('reviews-empty-wrap');
     const carousel  = document.getElementById('rv-carousel');
     const dotsEl    = document.getElementById('rv-dots');
-    const btnPrev   = document.getElementById('rv-prev');
-    const btnNext   = document.getElementById('rv-next');
 
     stage.innerHTML = '';
     if (dotsEl) dotsEl.innerHTML = '';
@@ -518,12 +516,16 @@ function loadReviewsTicker() {
         });
     }
 
-    if (btnPrev) { btnPrev.style.display = n > 1 ? '' : 'none'; btnPrev.onclick = () => go(-1); }
-    if (btnNext) { btnNext.style.display = n > 1 ? '' : 'none'; btnNext.onclick = () => go(1); }
-
     function restartAutoplay() {
         clearInterval(window._reviewTimer);
-        if (n > 1) window._reviewTimer = setInterval(() => go(1), 5000);
+        if (n > 1) {
+            window._reviewTimer = setInterval(() => {
+                if (n === 2) { go(1); return; }
+                let next;
+                do { next = Math.floor(Math.random() * n); } while (next === active);
+                setActive(next);
+            }, 4000);
+        }
     }
 
     const section = stage.closest('#reviews');
