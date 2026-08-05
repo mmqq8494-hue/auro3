@@ -546,100 +546,69 @@ footer { padding: 60px 40px 40px; text-align: center; border-top: 1px solid var(
 ::selection { background: rgba(197,160,89,0.25); color: #fff; text-shadow: 0 0 5px rgba(197,160,89,0.5); }
 ::-moz-selection { background: rgba(197,160,89,0.25); color: #fff; }
 
-/* REVIEWS SPOTLIGHT */
+/* REVIEWS COVERFLOW — center card + peeking side cards, click/dots/arrows/keyboard driven (no scroll-event dependency) */
 #reviews { min-height: auto; padding: 80px 20px 60px; }
 #reviews .section-header { margin-bottom: 52px; }
 
-.rv-spotlight { width: 100%; max-width: 680px; margin: 0 auto; text-align: center; }
+.rv-carousel { position: relative; display: flex; align-items: center; justify-content: center; gap: 18px; max-width: 1180px; margin: 0 auto; }
+.rv-stage { position: relative; flex: 1; height: 340px; }
 
-/* CSS Grid stacking — all cards share the same cell; tallest one sets height */
-.rv-spot-track {
-    display: grid;
-    grid-template-columns: 1fr;
+.rv-card {
+    position: absolute; top: 50%; right: 50%;
+    width: min(420px, 78vw); padding: 34px 30px 28px;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(155deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015));
+    border: 1px solid rgba(197,160,89,0.22);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    overflow: hidden; cursor: pointer; text-align: right;
+    will-change: transform, opacity;
+    transition: transform .9s cubic-bezier(.65,0,.35,1), opacity .9s cubic-bezier(.65,0,.35,1), border-color .6s ease;
+    transform: translate3d(50%, -50%, 0);
+}
+.rv-card::after {
+    content: ''; position: absolute; inset: 0; border-radius: inherit;
+    box-shadow: 0 30px 60px -18px rgba(197,160,89,0.35); opacity: 0; transition: opacity .7s ease;
+    pointer-events: none; z-index: -1;
+}
+.rv-card[data-pos="center"] { z-index: 5; opacity: 1; border-color: rgba(197,160,89,0.55); cursor: default; }
+.rv-card[data-pos="center"]::after { opacity: 1; }
+.rv-card[data-pos="left"], .rv-card[data-pos="right"] { z-index: 3; opacity: .5; filter: saturate(.85); }
+.rv-card[data-pos="hidden"] { z-index: 1; opacity: 0; pointer-events: none; }
+
+.rv-card__blob {
+    position: absolute; inset-inline-start: -30%; top: -35%; width: 65%; aspect-ratio: 1;
+    background: radial-gradient(circle, rgba(197,160,89,0.35), rgba(197,160,89,0) 70%);
+    filter: blur(6px); border-radius: 42% 58% 65% 35% / 45% 40% 60% 55%;
+    animation: rvBlobMorph 9s ease-in-out infinite; pointer-events: none; z-index: 0;
+}
+@keyframes rvBlobMorph {
+    0%, 100% { border-radius: 42% 58% 65% 35% / 45% 40% 60% 55%; transform: rotate(0deg) scale(1); }
+    50%      { border-radius: 58% 42% 35% 65% / 55% 60% 40% 45%; transform: rotate(20deg) scale(1.08); }
 }
 
-.rv-spot-card {
-    grid-column: 1;
-    grid-row: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 35px 25px 25px;
-    opacity: 0;
-    transition: opacity 0.75s ease;
-    pointer-events: none;
-    position: relative;
-
-    background: rgba(18, 18, 18, 0.55);
-    border: 1px solid rgba(197, 160, 89, 0.25);
-    border-radius: 16px;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    margin: 10px auto;
-    width: 90%;
-    max-width: 620px;
+.rv-card__quote { position: relative; font-family: Georgia, serif; font-size: 46px; line-height: 1; color: var(--gold); opacity: .8; margin-bottom: 4px; z-index: 1; }
+.rv-card__stars { position: relative; color: var(--gold); font-size: .85rem; letter-spacing: 3px; opacity: .9; margin-bottom: 16px; z-index: 1; }
+.rv-card__comment { position: relative; color: #fff; font-size: 15.5px; font-weight: 300; line-height: 1.9; min-height: 78px; margin-bottom: 22px; z-index: 1; }
+.rv-card__footer { position: relative; display: flex; align-items: center; gap: 12px; padding-top: 18px; border-top: 1px solid rgba(197,160,89,0.18); z-index: 1; }
+.rv-card__avatar {
+    width: 38px; height: 38px; flex: none; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px;
+    color: #000; background: linear-gradient(145deg, var(--gold-light), var(--gold-dark));
 }
-.rv-spot-card.active { opacity: 1; pointer-events: auto; }
-.rv-spot-card.active::before {
-    content: ''; position: absolute; inset: 14px; z-index: -1;
-    border: 1px solid rgba(197,160,89,.15); border-radius: 14px;
-    transform: translateY(12px) scale(.96); opacity: .7;
-}
-
-.rv-initial-badge {
-    width: 44px; height: 44px; border-radius: 50%; margin-bottom: 14px;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--glass); border: 1.5px solid rgba(197,160,89,.4);
-    color: var(--gold); font-weight: 700; font-size: 1.1rem;
-    box-shadow: 0 0 18px rgba(197,160,89,.2);
-}
-
-.rv-big-quote {
-    font-size: 5rem;
-    color: var(--gold);
-    opacity: 0.14;
-    line-height: 0.6;
-    font-family: Georgia, serif;
-    margin-bottom: 22px;
-    display: block;
-}
-.rv-spot-card.active .rv-big-quote { opacity: 0.24; }
-
-.rv-spot-text {
-    font-size: 1.08rem;
-    color: rgba(255,255,255,0.84);
-    line-height: 1.95;
-    font-style: italic;
-    margin-bottom: 30px;
-    max-width: 560px;
-}
-
-.rv-spot-author { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-.rv-spot-divider { width: 36px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--gold), transparent); margin-bottom: 4px; }
-.rv-spot-name { font-size: 0.82rem; font-weight: 700; color: var(--gold-light); letter-spacing: 3px; text-transform: uppercase; }
-.rv-spot-stars { color: var(--gold); font-size: 0.75rem; letter-spacing: 4px; opacity: 0.9; }
-.rv-spot-stars span { display: inline-block; opacity: 0; transform: translateY(4px); transition: opacity .4s ease, transform .4s ease; }
-.rv-spot-card.active .rv-spot-stars span { opacity: 1; transform: translateY(0); }
-.rv-spot-stars span:nth-child(1) { transition-delay: 0s; }
-.rv-spot-stars span:nth-child(2) { transition-delay: .06s; }
-.rv-spot-stars span:nth-child(3) { transition-delay: .12s; }
-.rv-spot-stars span:nth-child(4) { transition-delay: .18s; }
-.rv-spot-stars span:nth-child(5) { transition-delay: .24s; }
+.rv-card__name { color: #fff; font-size: 14.5px; font-weight: 500; }
+.rv-card__badge { display: block; color: rgba(197,160,89,0.75); font-size: 11.5px; margin-top: 2px; font-weight: 300; }
 
 /* Controls */
-.rv-spot-controls { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 36px; }
-
 .rv-btn {
-    width: 46px; height: 46px; border-radius: 50%;
+    flex: none; width: 46px; height: 46px; border-radius: 50%;
     border: 1.5px solid rgba(197,160,89,0.32);
     background: transparent; color: var(--gold); font-size: 1.5rem;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: all 0.35s ease; font-family: 'Cairo', sans-serif; line-height: 1;
+    transition: all 0.35s ease; font-family: 'Cairo', sans-serif; line-height: 1; z-index: 10;
 }
 .rv-btn:hover { background: var(--gold); color: #000; border-color: var(--gold); transform: scale(1.1); box-shadow: 0 0 22px rgba(197,160,89,0.28); }
 
-.rv-dots { display: flex; gap: 8px; align-items: center; }
+.rv-dots { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 24px; }
 .rv-dot { height: 3px; border-radius: 2px; background: rgba(197,160,89,0.22); border: none; cursor: pointer; transition: all 0.55s ease; width: 18px; padding: 0; }
 .rv-dot.active { width: 44px; background: var(--gold); box-shadow: 0 0 8px rgba(197,160,89,0.38); }
 
@@ -657,11 +626,14 @@ footer { padding: 60px 40px 40px; text-align: center; border-top: 1px solid var(
 
 @media (max-width: 767px) {
     #reviews { padding: 56px 16px 40px; }
-    .rv-spotlight { max-width: 100%; }
-    .rv-big-quote { font-size: 3.8rem; }
-    .rv-spot-text { font-size: 0.92rem; line-height: 1.85; }
-    .rv-btn { width: 42px; height: 42px; font-size: 1.3rem; }
-    .rv-dot { padding: 6px 0; box-sizing: content-box; }
+    .rv-stage { height: 380px; }
+    .rv-btn { width: 40px; height: 40px; font-size: 1.3rem; }
+    .rv-card { padding: 28px 22px 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .rv-card__blob { animation: none !important; }
+    .rv-card { transition: opacity .3s ease !important; }
 }
 
 /* ── 3D COVER FLOW GALLERY ── */
