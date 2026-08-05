@@ -419,7 +419,7 @@ window.addEventListener('scroll', () => {
     }
 }, { passive: true });
 
-// ── REVIEWS SPOTLIGHT FADE ────────────────────────────────
+// ── REVIEWS CAROUSEL (native scroll-snap) ──────────────────
 function loadReviewsTicker() {
     const track = document.getElementById('reviews-track');
     if (!track) return;
@@ -436,78 +436,100 @@ function loadReviewsTicker() {
     const approved = FeedbackService.getReviews('approved');
     track.innerHTML = '';
 
+    const dotsEl  = document.getElementById('rv-dots');
+    const btnPrev = document.getElementById('rv-prev');
+    const btnNext = document.getElementById('rv-next');
+
     if (!approved || !approved.length) {
         track.innerHTML = '<div class="reviews-empty">✦ &nbsp; كن أول من يشارك تجربته مع أورو &nbsp; ✦</div>';
+        if (dotsEl) dotsEl.innerHTML = '';
+        if (btnPrev) btnPrev.style.display = 'none';
+        if (btnNext) btnNext.style.display = 'none';
         return;
     }
+    if (btnPrev) btnPrev.style.display = '';
+    if (btnNext) btnNext.style.display = '';
 
-    // Build all cards — CSS grid stacks them; opacity fades between them
-    approved.forEach((r, i) => {
+    approved.forEach(r => {
         const rating = Math.min(5, Math.max(0, parseInt(r.rating) || 5));
-        const starsHtml = '★'.repeat(rating).split('').map(s => `<span>${s}</span>`).join('')
-            + '☆'.repeat(5 - rating).split('').map(s => `<span>${s}</span>`).join('');
+        const starsHtml = '★'.repeat(rating) + '☆'.repeat(5 - rating);
         const name = r.name || 'عميل مميز';
         const initial = escHtml(name.trim().charAt(0) || 'ع');
-        const card   = document.createElement('div');
-        card.className = 'rv-spot-card' + (i === 0 ? ' active' : '');
+        const card = document.createElement('div');
+        card.className = 'rv-card';
         card.innerHTML = `
             <div class="rv-initial-badge">${initial}</div>
-            <span class="rv-big-quote">"</span>
-            <p class="rv-spot-text">${escHtml(r.comment || 'تجربة رائعة مع أورو ✦')}</p>
-            <div class="rv-spot-author">
-                <div class="rv-spot-divider"></div>
-                <div class="rv-spot-name">${escHtml(name)}</div>
-                <div class="rv-spot-stars">${starsHtml}</div>
+            <span class="rv-quote">"</span>
+            <p class="rv-text">${escHtml(r.comment || 'تجربة رائعة مع أورو ✦')}</p>
+            <div class="rv-author">
+                <div class="rv-divider"></div>
+                <div class="rv-name">${escHtml(name)}</div>
+                <div class="rv-stars">${starsHtml}</div>
             </div>`;
         track.appendChild(card);
     });
 
-    const cards  = Array.from(track.querySelectorAll('.rv-spot-card'));
-    const n      = cards.length;
-    let   idx    = 0;
+    const cards = Array.from(track.querySelectorAll('.rv-card'));
+    const n     = cards.length;
+    let   idx   = 0;
     let   paused = false;
 
-    function goTo(i) {
-        cards[idx].classList.remove('active');
-        idx = ((i % n) + n) % n;
-        cards[idx].classList.add('active');
-        buildDots();
-    }
-
     function buildDots() {
-        const dotsEl = document.getElementById('rv-dots');
         if (!dotsEl) return;
         if (n <= 1) { dotsEl.innerHTML = ''; return; }
         dotsEl.innerHTML = '';
         for (let i = 0; i < n; i++) {
             const dot = document.createElement('button');
-            dot.className = 'rv-dot' + (i === idx ? ' active' : '');
+            dot.className = 'rv-dot' + (i === 0 ? ' active' : '');
             dot.setAttribute('aria-label', `التقييم ${i + 1}`);
-            dot.onclick = () => goTo(i);
+            dot.onclick = () => scrollToCard(i);
             dotsEl.appendChild(dot);
         }
     }
 
-    const btnPrev = document.getElementById('rv-prev');
-    const btnNext = document.getElementById('rv-next');
-    if (btnPrev) btnPrev.onclick = () => goTo(idx - 1);
-    if (btnNext) btnNext.onclick = () => goTo(idx + 1);
-
-    const spotlight = track.closest('.rv-spotlight');
-    if (spotlight) {
-        spotlight.addEventListener('mouseenter', () => { paused = true; });
-        spotlight.addEventListener('mouseleave', () => { paused = false; });
+    function setActiveDot(i) {
+        if (!dotsEl) return;
+        Array.from(dotsEl.children).forEach((d, di) => d.classList.toggle('active', di === i));
     }
 
-    let tsX = 0;
-    track.addEventListener('touchstart', e => { tsX = e.touches[0].clientX; }, { passive: true });
-    track.addEventListener('touchend', e => {
-        const dx = tsX - e.changedTouches[0].clientX;
-        if (Math.abs(dx) > 40) goTo(dx > 0 ? idx + 1 : idx - 1);
-    });
+    function scrollToCard(i) {
+        idx = ((i % n) + n) % n;
+        cards[idx].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+
+    if (btnPrev) btnPrev.onclick = () => scrollToCard(idx - 1);
+    if (btnNext) btnNext.onclick = () => scrollToCard(idx + 1);
+
+    // Keep the active dot in sync with whichever card is actually closest to
+    // the track's center — covers auto-advance AND free manual swipe/scroll/drag.
+    // (Plain scroll + getBoundingClientRect + setTimeout debounce — deliberately not
+    // requestAnimationFrame/IntersectionObserver, both of which some browser contexts
+    // suspend for backgrounded/non-composited pages.)
+    let scrollDebounce = null;
+    function syncActiveFromScroll() {
+        const trackRect = track.getBoundingClientRect();
+        const centerX = trackRect.left + trackRect.width / 2;
+        let closest = 0, closestDist = Infinity;
+        cards.forEach((c, i) => {
+            const r = c.getBoundingClientRect();
+            const dist = Math.abs((r.left + r.width / 2) - centerX);
+            if (dist < closestDist) { closestDist = dist; closest = i; }
+        });
+        if (closest !== idx) idx = closest;
+        setActiveDot(closest);
+    }
+    track.addEventListener('scroll', () => {
+        clearTimeout(scrollDebounce);
+        scrollDebounce = setTimeout(syncActiveFromScroll, 80);
+    }, { passive: true });
+
+    track.addEventListener('mouseenter', () => { paused = true; });
+    track.addEventListener('mouseleave', () => { paused = false; });
+    track.addEventListener('touchstart', () => { paused = true; }, { passive: true });
+    track.addEventListener('touchend', () => { setTimeout(() => { paused = false; }, 3000); }, { passive: true });
 
     if (n > 1) {
-        window._reviewTimer = setInterval(() => { if (!paused) goTo(idx + 1); }, 5000);
+        window._reviewTimer = setInterval(() => { if (!paused) scrollToCard(idx + 1); }, 5000);
     }
 
     buildDots();

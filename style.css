@@ -546,45 +546,27 @@ footer { padding: 60px 40px 40px; text-align: center; border-top: 1px solid var(
 ::selection { background: rgba(197,160,89,0.25); color: #fff; text-shadow: 0 0 5px rgba(197,160,89,0.5); }
 ::-moz-selection { background: rgba(197,160,89,0.25); color: #fff; }
 
-/* REVIEWS SPOTLIGHT */
+/* REVIEWS CAROUSEL — native scroll-snap, works even without JS auto-advance */
 #reviews { min-height: auto; padding: 80px 20px 60px; }
 #reviews .section-header { margin-bottom: 52px; }
 
-.rv-spotlight { width: 100%; max-width: 680px; margin: 0 auto; text-align: center; }
+.rv-carousel { width: 100%; max-width: 720px; margin: 0 auto; position: relative; }
 
-/* CSS Grid stacking — all cards share the same cell; tallest one sets height */
-.rv-spot-track {
-    display: grid;
-    grid-template-columns: 1fr;
+.rv-track {
+    display: flex; gap: 18px; overflow-x: auto; scroll-snap-type: x mandatory;
+    padding: 6px 4px 8px; scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; -ms-overflow-style: none;
 }
+.rv-track::-webkit-scrollbar { display: none; }
 
-.rv-spot-card {
-    grid-column: 1;
-    grid-row: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 35px 25px 25px;
-    opacity: 0;
-    transition: opacity 0.75s ease;
-    pointer-events: none;
-    position: relative;
-
-    background: rgba(18, 18, 18, 0.55);
-    border: 1px solid rgba(197, 160, 89, 0.25);
-    border-radius: 16px;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    margin: 10px auto;
-    width: 90%;
-    max-width: 620px;
-}
-.rv-spot-card.active { opacity: 1; pointer-events: auto; }
-.rv-spot-card.active::before {
-    content: ''; position: absolute; inset: 14px; z-index: -1;
-    border: 1px solid rgba(197,160,89,.15); border-radius: 14px;
-    transform: translateY(12px) scale(.96); opacity: .7;
+.rv-card {
+    flex: 0 0 100%; scroll-snap-align: center; scroll-snap-stop: always;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    padding: 40px 28px 30px; position: relative;
+    background: rgba(18, 18, 18, 0.55); border: 1px solid rgba(197, 160, 89, 0.25);
+    border-radius: 16px; box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
 }
 
 .rv-initial-badge {
@@ -595,40 +577,15 @@ footer { padding: 60px 40px 40px; text-align: center; border-top: 1px solid var(
     box-shadow: 0 0 18px rgba(197,160,89,.2);
 }
 
-.rv-big-quote {
-    font-size: 5rem;
-    color: var(--gold);
-    opacity: 0.14;
-    line-height: 0.6;
-    font-family: Georgia, serif;
-    margin-bottom: 22px;
-    display: block;
-}
-.rv-spot-card.active .rv-big-quote { opacity: 0.24; }
-
-.rv-spot-text {
-    font-size: 1.08rem;
-    color: rgba(255,255,255,0.84);
-    line-height: 1.95;
-    font-style: italic;
-    margin-bottom: 30px;
-    max-width: 560px;
-}
-
-.rv-spot-author { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-.rv-spot-divider { width: 36px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--gold), transparent); margin-bottom: 4px; }
-.rv-spot-name { font-size: 0.82rem; font-weight: 700; color: var(--gold-light); letter-spacing: 3px; text-transform: uppercase; }
-.rv-spot-stars { color: var(--gold); font-size: 0.75rem; letter-spacing: 4px; opacity: 0.9; }
-.rv-spot-stars span { display: inline-block; opacity: 0; transform: translateY(4px); transition: opacity .4s ease, transform .4s ease; }
-.rv-spot-card.active .rv-spot-stars span { opacity: 1; transform: translateY(0); }
-.rv-spot-stars span:nth-child(1) { transition-delay: 0s; }
-.rv-spot-stars span:nth-child(2) { transition-delay: .06s; }
-.rv-spot-stars span:nth-child(3) { transition-delay: .12s; }
-.rv-spot-stars span:nth-child(4) { transition-delay: .18s; }
-.rv-spot-stars span:nth-child(5) { transition-delay: .24s; }
+.rv-quote { font-size: 5rem; color: var(--gold); opacity: 0.24; line-height: 0.6; font-family: Georgia, serif; margin-bottom: 22px; display: block; }
+.rv-text { font-size: 1.08rem; color: rgba(255,255,255,0.84); line-height: 1.95; font-style: italic; margin-bottom: 30px; max-width: 560px; }
+.rv-author { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.rv-divider { width: 36px; height: 1.5px; background: linear-gradient(90deg, transparent, var(--gold), transparent); margin-bottom: 4px; }
+.rv-name { font-size: 0.82rem; font-weight: 700; color: var(--gold-light); letter-spacing: 3px; text-transform: uppercase; }
+.rv-stars { color: var(--gold); font-size: 0.75rem; letter-spacing: 4px; opacity: 0.9; }
 
 /* Controls */
-.rv-spot-controls { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 36px; }
+.rv-controls { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 24px; }
 
 .rv-btn {
     width: 46px; height: 46px; border-radius: 50%;
@@ -657,9 +614,8 @@ footer { padding: 60px 40px 40px; text-align: center; border-top: 1px solid var(
 
 @media (max-width: 767px) {
     #reviews { padding: 56px 16px 40px; }
-    .rv-spotlight { max-width: 100%; }
-    .rv-big-quote { font-size: 3.8rem; }
-    .rv-spot-text { font-size: 0.92rem; line-height: 1.85; }
+    .rv-quote { font-size: 3.8rem; }
+    .rv-text { font-size: 0.92rem; line-height: 1.85; }
     .rv-btn { width: 42px; height: 42px; font-size: 1.3rem; }
     .rv-dot { padding: 6px 0; box-sizing: content-box; }
 }
