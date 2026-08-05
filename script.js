@@ -419,38 +419,42 @@ window.addEventListener('scroll', () => {
     }
 }, { passive: true });
 
-// ── REVIEWS CAROUSEL (native scroll-snap) ──────────────────
+// ── REVIEWS COVERFLOW (center card + peeking sides; click/dots/arrows/keyboard) ──
 function loadReviewsTicker() {
-    const track = document.getElementById('reviews-track');
-    if (!track) return;
+    const stage = document.getElementById('reviews-track');
+    if (!stage) return;
 
     if (typeof FeedbackService === 'undefined') { setTimeout(loadReviewsTicker, 150); return; }
     FeedbackService.init();
 
-    if (window._reviewTimer) { clearInterval(window._reviewTimer); window._reviewTimer = null; }
+    if (window._reviewTimer)      { clearInterval(window._reviewTimer); window._reviewTimer = null; }
+    if (window._reviewKeyHandler) { document.removeEventListener('keydown', window._reviewKeyHandler); window._reviewKeyHandler = null; }
 
     function escHtml(s) {
         return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    const approved = FeedbackService.getReviews('approved');
-    track.innerHTML = '';
+    const approved  = FeedbackService.getReviews('approved');
+    const emptyWrap = document.getElementById('reviews-empty-wrap');
+    const carousel  = document.getElementById('rv-carousel');
+    const dotsEl    = document.getElementById('rv-dots');
+    const btnPrev   = document.getElementById('rv-prev');
+    const btnNext   = document.getElementById('rv-next');
 
-    const dotsEl  = document.getElementById('rv-dots');
-    const btnPrev = document.getElementById('rv-prev');
-    const btnNext = document.getElementById('rv-next');
+    stage.innerHTML = '';
+    if (dotsEl) dotsEl.innerHTML = '';
 
     if (!approved || !approved.length) {
-        track.innerHTML = '<div class="reviews-empty">✦ &nbsp; كن أول من يشارك تجربته مع أورو &nbsp; ✦</div>';
-        if (dotsEl) dotsEl.innerHTML = '';
-        if (btnPrev) btnPrev.style.display = 'none';
-        if (btnNext) btnNext.style.display = 'none';
+        if (emptyWrap) emptyWrap.style.display = '';
+        if (carousel)  carousel.style.display = 'none';
+        if (dotsEl)    dotsEl.style.display = 'none';
         return;
     }
-    if (btnPrev) btnPrev.style.display = '';
-    if (btnNext) btnNext.style.display = '';
+    if (emptyWrap) emptyWrap.style.display = 'none';
+    if (carousel)  carousel.style.display = '';
+    if (dotsEl)    dotsEl.style.display = '';
 
-    approved.forEach(r => {
+    const cards = approved.map(r => {
         const rating = Math.min(5, Math.max(0, parseInt(r.rating) || 5));
         const starsHtml = '★'.repeat(rating) + '☆'.repeat(5 - rating);
         const name = r.name || 'عميل مميز';
@@ -458,81 +462,87 @@ function loadReviewsTicker() {
         const card = document.createElement('div');
         card.className = 'rv-card';
         card.innerHTML = `
-            <div class="rv-initial-badge">${initial}</div>
-            <span class="rv-quote">"</span>
-            <p class="rv-text">${escHtml(r.comment || 'تجربة رائعة مع أورو ✦')}</p>
-            <div class="rv-author">
-                <div class="rv-divider"></div>
-                <div class="rv-name">${escHtml(name)}</div>
-                <div class="rv-stars">${starsHtml}</div>
+            <div class="rv-card__blob"></div>
+            <div class="rv-card__quote">"</div>
+            <div class="rv-card__stars">${starsHtml}</div>
+            <p class="rv-card__comment">${escHtml(r.comment || 'تجربة رائعة مع أورو ✦')}</p>
+            <div class="rv-card__footer">
+                <div class="rv-card__avatar">${initial}</div>
+                <div>
+                    <div class="rv-card__name">${escHtml(name)}</div>
+                    <span class="rv-card__badge">عميل موثّق</span>
+                </div>
             </div>`;
-        track.appendChild(card);
+        stage.appendChild(card);
+        return card;
     });
 
-    const cards = Array.from(track.querySelectorAll('.rv-card'));
-    const n     = cards.length;
-    let   idx   = 0;
-    let   paused = false;
+    const n = cards.length;
+    let active = 0;
 
-    function buildDots() {
-        if (!dotsEl) return;
-        if (n <= 1) { dotsEl.innerHTML = ''; return; }
-        dotsEl.innerHTML = '';
-        for (let i = 0; i < n; i++) {
-            const dot = document.createElement('button');
-            dot.className = 'rv-dot' + (i === 0 ? ' active' : '');
-            dot.setAttribute('aria-label', `التقييم ${i + 1}`);
-            dot.onclick = () => scrollToCard(i);
-            dotsEl.appendChild(dot);
-        }
-    }
+    function mod(a, m) { return ((a % m) + m) % m; }
 
-    function setActiveDot(i) {
-        if (!dotsEl) return;
-        Array.from(dotsEl.children).forEach((d, di) => d.classList.toggle('active', di === i));
-    }
-
-    function scrollToCard(i) {
-        idx = ((i % n) + n) % n;
-        cards[idx].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-    }
-
-    if (btnPrev) btnPrev.onclick = () => scrollToCard(idx - 1);
-    if (btnNext) btnNext.onclick = () => scrollToCard(idx + 1);
-
-    // Keep the active dot in sync with whichever card is actually closest to
-    // the track's center — covers auto-advance AND free manual swipe/scroll/drag.
-    // (Plain scroll + getBoundingClientRect + setTimeout debounce — deliberately not
-    // requestAnimationFrame/IntersectionObserver, both of which some browser contexts
-    // suspend for backgrounded/non-composited pages.)
-    let scrollDebounce = null;
-    function syncActiveFromScroll() {
-        const trackRect = track.getBoundingClientRect();
-        const centerX = trackRect.left + trackRect.width / 2;
-        let closest = 0, closestDist = Infinity;
-        cards.forEach((c, i) => {
-            const r = c.getBoundingClientRect();
-            const dist = Math.abs((r.left + r.width / 2) - centerX);
-            if (dist < closestDist) { closestDist = dist; closest = i; }
+    // RTL layout: visually-right side shows "next" content (i+1), visually-left shows "prev" (i-1)
+    function render() {
+        cards.forEach((card, i) => {
+            const diff = mod(i - active + Math.floor(n / 2), n) - Math.floor(n / 2);
+            let pos, tx, scale;
+            if (diff === 0)       { pos = 'center'; tx = 0;   scale = 1; }
+            else if (diff === -1) { pos = 'right';  tx = 58;  scale = .84; }
+            else if (diff === 1)  { pos = 'left';   tx = -58; scale = .84; }
+            else if (diff === -2) { pos = 'hidden'; tx = 108; scale = .7; }
+            else                  { pos = 'hidden'; tx = -108; scale = .7; }
+            card.dataset.pos = pos;
+            card.style.transform = `translate3d(calc(50% + ${tx}%), -50%, 0) scale(${scale})`;
         });
-        if (closest !== idx) idx = closest;
-        setActiveDot(closest);
-    }
-    track.addEventListener('scroll', () => {
-        clearTimeout(scrollDebounce);
-        scrollDebounce = setTimeout(syncActiveFromScroll, 80);
-    }, { passive: true });
-
-    track.addEventListener('mouseenter', () => { paused = true; });
-    track.addEventListener('mouseleave', () => { paused = false; });
-    track.addEventListener('touchstart', () => { paused = true; }, { passive: true });
-    track.addEventListener('touchend', () => { setTimeout(() => { paused = false; }, 3000); }, { passive: true });
-
-    if (n > 1) {
-        window._reviewTimer = setInterval(() => { if (!paused) scrollToCard(idx + 1); }, 5000);
+        if (dotsEl) Array.from(dotsEl.children).forEach((d, i) => d.classList.toggle('active', i === active));
     }
 
-    buildDots();
+    function setActive(i) { active = mod(i, n); render(); restartAutoplay(); }
+    function go(delta) { setActive(active + delta); }
+
+    cards.forEach(card => {
+        card.addEventListener('click', () => {
+            if (card.dataset.pos === 'left') go(1);
+            else if (card.dataset.pos === 'right') go(-1);
+        });
+    });
+
+    if (dotsEl && n > 1) {
+        cards.forEach((_, i) => {
+            const dot = document.createElement('button');
+            dot.className = 'rv-dot';
+            dot.setAttribute('aria-label', `التقييم ${i + 1}`);
+            dot.onclick = () => setActive(i);
+            dotsEl.appendChild(dot);
+        });
+    }
+
+    if (btnPrev) { btnPrev.style.display = n > 1 ? '' : 'none'; btnPrev.onclick = () => go(-1); }
+    if (btnNext) { btnNext.style.display = n > 1 ? '' : 'none'; btnNext.onclick = () => go(1); }
+
+    function restartAutoplay() {
+        clearInterval(window._reviewTimer);
+        if (n > 1) window._reviewTimer = setInterval(() => go(1), 5000);
+    }
+
+    const section = stage.closest('#reviews');
+    if (section) {
+        section.addEventListener('mouseenter', () => clearInterval(window._reviewTimer));
+        section.addEventListener('mouseleave', restartAutoplay);
+    }
+
+    window._reviewKeyHandler = (e) => {
+        if (!section) return;
+        const rect = section.getBoundingClientRect();
+        if (!(rect.top < window.innerHeight && rect.bottom > 0)) return;
+        if (e.key === 'ArrowRight') go(-1);
+        if (e.key === 'ArrowLeft') go(1);
+    };
+    document.addEventListener('keydown', window._reviewKeyHandler);
+
+    render();
+    restartAutoplay();
 }
 
 if (document.readyState === 'loading') {
