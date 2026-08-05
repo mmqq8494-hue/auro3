@@ -419,18 +419,19 @@ window.addEventListener('scroll', () => {
     }
 }, { passive: true });
 
-// ── REVIEWS AUTO-CROSSFADE ──────────────────────────────────
-// Cycling is driven entirely by a CSS @keyframes animation (generated below with
-// per-review timing) — there is no setInterval/setTimeout driving the rotation
-// itself, so it cannot be affected by JS timer throttling/suspension in any
-// browser context. Each card gets the same animation with a staggered negative
-// animation-delay, so they take turns being the one visible card.
+// ── REVIEWS CAROUSEL ─────────────────────────────────────────
+// Same mechanism as the 3D gallery below (initCoverFlow): plain CSS
+// `transition` + JS class swap on a currentIndex, driven by clicking a
+// side card or (here) a setInterval tick — no scroll events, no
+// IntersectionObserver, no @keyframes.
 function loadReviewsTicker() {
     const stage = document.getElementById('reviews-track');
     if (!stage) return;
 
     if (typeof FeedbackService === 'undefined') { setTimeout(loadReviewsTicker, 150); return; }
     FeedbackService.init();
+
+    if (window._reviewTimer) { clearInterval(window._reviewTimer); window._reviewTimer = null; }
 
     function escHtml(s) {
         return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -474,37 +475,39 @@ function loadReviewsTicker() {
     });
 
     const n = cards.length;
-    const PER_CARD_SECONDS = 4;
+    let currentIndex = 0;
 
-    if (n === 1) {
-        cards[0].style.animation = 'none';
-        cards[0].style.opacity = '1';
-        return;
+    function updateCarousel() {
+        cards.forEach((card, i) => {
+            let dist = i - currentIndex;
+            if (dist > n / 2) dist -= n;
+            if (dist < -n / 2) dist += n;
+
+            card.className = 'rv-card';
+            if (dist === 0) card.classList.add('is-center');
+            else if (dist === 1) card.classList.add('is-right-1');
+            else if (dist === -1) card.classList.add('is-left-1');
+            else card.classList.add('is-hidden');
+        });
     }
 
-    const slot = 100 / n;
-    const fade = Math.min(slot * 0.25, 3);
-    const keyframesCSS = `@keyframes rvCardCycle {
-        0% { opacity: 0; }
-        ${fade}% { opacity: 1; }
-        ${slot - fade}% { opacity: 1; }
-        ${slot}% { opacity: 0; }
-        100% { opacity: 0; }
-    }`;
+    function nextCard() { currentIndex = (currentIndex + 1) % n; updateCarousel(); }
 
-    let styleTag = document.getElementById('rv-keyframes-style');
-    if (!styleTag) {
-        styleTag = document.createElement('style');
-        styleTag.id = 'rv-keyframes-style';
-        document.head.appendChild(styleTag);
-    }
-    styleTag.textContent = keyframesCSS;
-
-    const totalDuration = n * PER_CARD_SECONDS;
-    cards.forEach((card, i) => {
-        card.style.animationDuration = totalDuration + 's';
-        card.style.animationDelay = (-(i * PER_CARD_SECONDS)) + 's';
+    cards.forEach((c, i) => {
+        c.addEventListener('click', () => {
+            if (!c.classList.contains('is-center')) {
+                currentIndex = i;
+                updateCarousel();
+            }
+        });
     });
+
+    updateCarousel();
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (n > 1 && !reducedMotion) {
+        window._reviewTimer = setInterval(nextCard, 4000);
+    }
 }
 
 if (document.readyState === 'loading') {

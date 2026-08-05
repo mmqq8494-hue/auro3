@@ -546,29 +546,31 @@ footer { padding: 60px 40px 40px; text-align: center; border-top: 1px solid var(
 ::selection { background: rgba(197,160,89,0.25); color: #fff; text-shadow: 0 0 5px rgba(197,160,89,0.5); }
 ::-moz-selection { background: rgba(197,160,89,0.25); color: #fff; }
 
-/* REVIEWS AUTO-CROSSFADE — pure CSS @keyframes animation drives the cycling,
-   deliberately with NO JavaScript timer (setInterval) in the loop at all, so it
-   cannot be affected by JS timer throttling/suspension in any browser context. */
+/* REVIEWS CAROUSEL — same transition/class-toggle mechanism as the 3D gallery
+   below (#gallery .stack-card): plain CSS `transition` + JS class swap, no
+   @keyframes, no scroll/IntersectionObserver dependency. */
 #reviews { min-height: auto; padding: 80px 20px 60px; }
 #reviews .section-header { margin-bottom: 52px; }
 
-.rv-carousel { position: relative; max-width: 620px; margin: 0 auto; }
-.rv-stage { position: relative; height: 340px; }
+.rv-carousel { position: relative; max-width: 620px; margin: 0 auto; perspective: 1200px; }
+.rv-stage { position: relative; height: 340px; transform-style: preserve-3d; }
 
 .rv-card {
     position: absolute; inset: 0; margin: auto;
     width: min(420px, 78vw); height: fit-content; padding: 34px 30px 28px;
     border-radius: var(--radius-lg);
     background: linear-gradient(155deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015));
-    border: 1px solid rgba(197,160,89,0.4);
+    border: 1.5px solid rgba(197,160,89,0.3);
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    overflow: hidden; text-align: right;
-    box-shadow: 0 30px 60px -18px rgba(197,160,89,0.35);
-    opacity: 0;
-    animation-name: rvCardCycle;
-    animation-timing-function: ease-in-out;
-    animation-iteration-count: infinite;
+    overflow: hidden; text-align: right; cursor: pointer;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+    opacity: 0; pointer-events: none;
 }
+.rv-card.is-center  { transform: translateX(0) translateZ(0) scale(1); opacity: 1; z-index: 10; pointer-events: auto; filter: blur(0); cursor: default; }
+.rv-card.is-right-1 { transform: translateX(65%) translateZ(-100px) scale(0.85); opacity: 0.5; z-index: 9; pointer-events: auto; filter: blur(2px); }
+.rv-card.is-left-1  { transform: translateX(-65%) translateZ(-100px) scale(0.85); opacity: 0.5; z-index: 9; pointer-events: auto; filter: blur(2px); }
+.rv-card.is-hidden  { transform: translateX(0) translateZ(-300px) scale(0.5); opacity: 0; z-index: 1; pointer-events: none; }
 
 .rv-card__blob {
     position: absolute; inset-inline-start: -30%; top: -35%; width: 65%; aspect-ratio: 1;
@@ -624,8 +626,7 @@ footer { padding: 60px 40px 40px; text-align: center; border-top: 1px solid var(
 
 @media (prefers-reduced-motion: reduce) {
     .rv-card__blob { animation: none !important; }
-    .rv-card { animation: none !important; opacity: 0 !important; }
-    .rv-card:first-child { opacity: 1 !important; }
+    .rv-card { transition: none !important; }
 }
 
 /* ── 3D COVER FLOW GALLERY ── */
