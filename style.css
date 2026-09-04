@@ -63,7 +63,7 @@ a:focus-visible, button:focus-visible, .glass-input:focus-visible, [tabindex]:fo
 /* ── BACKGROUND ── */
 #bg-slideshow {
     position: fixed; inset: 0; z-index: -2;
-    background-image: url('AUROwebsitebg.png');
+    background-image: url('hero-real.webp');
     background-size: cover; background-position: center;
     filter: blur(0px) brightness(0.8) saturate(1.2);
     transform: scale(1.1); opacity: 1;
@@ -117,7 +117,7 @@ section { min-height: 100vh; width: 100%; display: flex; flex-direction: column;
 #hero { min-height: 100vh; text-align: center; gap: 0; }
 .hero-eyebrow { font-size: .7rem; letter-spacing: 6px; color: var(--gold); text-transform: uppercase; margin-bottom: 32px; display: flex; align-items: center; gap: 16px; }
 .hero-eyebrow::before, .hero-eyebrow::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--gold)); max-width: 60px; }
-.hero-logo { width: 180px; border-radius: var(--radius-xl); margin-bottom: 40px; box-shadow: 0 0 70px rgba(197,160,89,.3); animation: heroLogoIn 1.2s cubic-bezier(.4,0,.2,1) forwards; }
+.hero-logo { width: 180px; height: auto; border-radius: var(--radius-xl); margin-bottom: 40px; box-shadow: 0 0 70px rgba(197,160,89,.3); animation: heroLogoIn 1.2s cubic-bezier(.4,0,.2,1) forwards; }
 @keyframes heroLogoIn { from { opacity: 0; transform: scale(.7) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 .hero-title { font-size: clamp(1.4rem, 4vw, 2.8rem); font-weight: 300; line-height: 1.6; color: rgba(255,255,255,.85); letter-spacing: 0px; margin-bottom: 16px; }
 .hero-title strong { font-weight: 700; color: #fff; display: block; font-size: clamp(1.5rem, 5vw, 3.8rem); letter-spacing: 0px; margin-top: 8px; }
@@ -420,7 +420,7 @@ footer { padding: 60px 40px 40px; text-align: center; border-top: 1px solid var(
 /* ── PRELOADER ── */
 #preloader { position: fixed; inset: 0; z-index: 10000; background: #080808; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity .6s ease, visibility .6s; }
 #preloader.hide { opacity: 0; visibility: hidden; pointer-events: none; }
-.preloader-logo { width: 120px; border-radius: 28px; animation: preloaderPulse 1.8s ease-in-out infinite; }
+.preloader-logo { width: 120px; height: auto; border-radius: 28px; animation: preloaderPulse 1.8s ease-in-out infinite; }
 @keyframes preloaderPulse { 0%,100% { transform: scale(1); opacity: .7; } 50% { transform: scale(1.08); opacity: 1; } }
 .preloader-bar { width: 160px; height: 3px; background: rgba(197,160,89,.2); border-radius: 4px; margin-top: 32px; overflow: hidden; }
 .preloader-fill { width: 0; height: 100%; background: var(--gold); border-radius: 4px; animation: preloaderFill 1.5s ease forwards; }
@@ -529,7 +529,7 @@ footer { padding: 60px 40px 40px; text-align: center; border-top: 1px solid var(
 .transition-content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 20px; opacity: 0; transform: translateY(20px); transition: all 0.5s ease 0.4s; }
 #page-transition.active .transition-content { opacity: 1; transform: translateY(0); }
 #page-transition.exit .transition-content { opacity: 0; transform: translateY(-20px); }
-.transition-logo { width: 120px; border-radius: 24px; filter: drop-shadow(0 0 30px rgba(197,160,89,0.4)); }
+.transition-logo { width: 120px; height: auto; border-radius: 24px; filter: drop-shadow(0 0 30px rgba(197,160,89,0.4)); }
 .transition-line { width: 0; height: 2px; background: var(--gold); transition: width 0.8s ease 0.6s; }
 #page-transition.active .transition-line { width: 150px; }
 
@@ -546,47 +546,44 @@ footer { padding: 60px 40px 40px; text-align: center; border-top: 1px solid var(
 ::selection { background: rgba(197,160,89,0.25); color: #fff; text-shadow: 0 0 5px rgba(197,160,89,0.5); }
 ::-moz-selection { background: rgba(197,160,89,0.25); color: #fff; }
 
-/* REVIEWS CAROUSEL — same transition/class-toggle mechanism as the 3D gallery
-   below (#gallery .stack-card): plain CSS `transition` + JS class swap, no
-   @keyframes, no scroll/IntersectionObserver dependency. */
+/* REVIEWS GRID — every approved review shown at once, statically. No timer,
+   no animation-driven cycling, nothing that depends on timing to be visible. */
 #reviews { min-height: auto; padding: 80px 20px 60px; }
 #reviews .section-header { margin-bottom: 52px; }
 
-.rv-carousel { position: relative; max-width: 620px; margin: 0 auto; perspective: 1200px; }
-.rv-stage { position: relative; height: 340px; transform-style: preserve-3d; }
+.rv-carousel {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 22px; max-width: 1100px; margin: 0 auto;
+    align-items: stretch;
+}
 
 .rv-card {
-    position: absolute; inset: 0; margin: auto;
-    width: min(420px, 78vw); height: fit-content; padding: 34px 30px 28px;
+    position: relative; display: flex; flex-direction: column;
+    padding: 32px 28px 26px;
     border-radius: var(--radius-lg);
     background: linear-gradient(155deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015));
     border: 1.5px solid rgba(197,160,89,0.3);
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    overflow: hidden; text-align: right; cursor: pointer;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-    transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
-    opacity: 0; pointer-events: none;
+    overflow: hidden; text-align: right;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    transition: border-color .4s, transform .4s;
 }
-.rv-card.is-center  { transform: translateX(0) translateZ(0) scale(1); opacity: 1; z-index: 10; pointer-events: auto; filter: blur(0); cursor: default; }
-.rv-card.is-right-1 { transform: translateX(65%) translateZ(-100px) scale(0.85); opacity: 0.5; z-index: 9; pointer-events: auto; filter: blur(2px); }
-.rv-card.is-left-1  { transform: translateX(-65%) translateZ(-100px) scale(0.85); opacity: 0.5; z-index: 9; pointer-events: auto; filter: blur(2px); }
-.rv-card.is-hidden  { transform: translateX(0) translateZ(-300px) scale(0.5); opacity: 0; z-index: 1; pointer-events: none; }
+.rv-card:hover { border-color: rgba(197,160,89,0.6); transform: translateY(-4px); }
 
 .rv-card__blob {
     position: absolute; inset-inline-start: -30%; top: -35%; width: 65%; aspect-ratio: 1;
     background: radial-gradient(circle, rgba(197,160,89,0.35), rgba(197,160,89,0) 70%);
     filter: blur(6px); border-radius: 42% 58% 65% 35% / 45% 40% 60% 55%;
-    animation: rvBlobMorph 9s ease-in-out infinite; pointer-events: none; z-index: 0;
-}
-@keyframes rvBlobMorph {
-    0%, 100% { border-radius: 42% 58% 65% 35% / 45% 40% 60% 55%; transform: rotate(0deg) scale(1); }
-    50%      { border-radius: 58% 42% 35% 65% / 55% 60% 40% 45%; transform: rotate(20deg) scale(1.08); }
+    pointer-events: none; z-index: 0;
 }
 
-.rv-card__quote { position: relative; font-family: Georgia, serif; font-size: 46px; line-height: 1; color: var(--gold); opacity: .8; margin-bottom: 4px; z-index: 1; }
-.rv-card__stars { position: relative; color: var(--gold); font-size: .85rem; letter-spacing: 3px; opacity: .9; margin-bottom: 16px; z-index: 1; }
-.rv-card__comment { position: relative; color: #fff; font-size: 15.5px; font-weight: 300; line-height: 1.9; min-height: 78px; margin-bottom: 22px; z-index: 1; }
-.rv-card__footer { position: relative; display: flex; align-items: center; gap: 12px; padding-top: 18px; border-top: 1px solid rgba(197,160,89,0.18); z-index: 1; }
+.rv-card__quote { position: relative; font-family: Georgia, serif; font-size: 42px; line-height: 1; color: var(--gold); opacity: .8; margin-bottom: 4px; z-index: 1; }
+.rv-card__stars { position: relative; color: var(--gold); font-size: .8rem; letter-spacing: 3px; opacity: .9; margin-bottom: 14px; z-index: 1; }
+.rv-card__comment {
+    position: relative; color: #fff; font-size: 14.5px; font-weight: 300; line-height: 1.85; margin-bottom: 20px; z-index: 1;
+    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+}
+.rv-card__footer { position: relative; display: flex; align-items: center; gap: 12px; padding-top: 16px; margin-top: auto; border-top: 1px solid rgba(197,160,89,0.18); z-index: 1; }
 .rv-card__avatar {
     width: 38px; height: 38px; flex: none; border-radius: 50%;
     display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px;
@@ -594,16 +591,6 @@ footer { padding: 60px 40px 40px; text-align: center; border-top: 1px solid var(
 }
 .rv-card__name { color: #fff; font-size: 14.5px; font-weight: 500; }
 .rv-card__badge { display: block; color: rgba(197,160,89,0.75); font-size: 11.5px; margin-top: 2px; font-weight: 300; }
-
-/* .rv-btn is shared with the gallery's next/prev buttons (#stack-next/#stack-prev) */
-.rv-btn {
-    flex: none; width: 46px; height: 46px; border-radius: 50%;
-    border: 1.5px solid rgba(197,160,89,0.32);
-    background: transparent; color: var(--gold); font-size: 1.5rem;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: all 0.35s ease; font-family: 'Cairo', sans-serif; line-height: 1; z-index: 10;
-}
-.rv-btn:hover { background: var(--gold); color: #000; border-color: var(--gold); transform: scale(1.1); box-shadow: 0 0 22px rgba(197,160,89,0.28); }
 
 .rv-cta { font-size: 0.85rem; padding: 11px 28px; letter-spacing: 1.5px; }
 .reviews-empty {
@@ -617,16 +604,14 @@ footer { padding: 60px 40px 40px; text-align: center; border-top: 1px solid var(
     font-size: 6rem; color: var(--gold); opacity: 0.1; line-height: 1; font-family: Georgia, serif; pointer-events: none;
 }
 
-@media (max-width: 767px) {
-    #reviews { padding: 56px 16px 40px; }
-    .rv-stage { height: 380px; }
-    .rv-btn { width: 40px; height: 40px; font-size: 1.3rem; }
-    .rv-card { padding: 28px 22px 24px; }
+@media (max-width: 980px) {
+    .rv-carousel { grid-template-columns: repeat(2, 1fr); }
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .rv-card__blob { animation: none !important; }
-    .rv-card { transition: none !important; }
+@media (max-width: 767px) {
+    #reviews { padding: 56px 16px 40px; }
+    .rv-carousel { grid-template-columns: 1fr; gap: 16px; }
+    .rv-card { padding: 28px 22px 24px; }
 }
 
 /* ── 3D COVER FLOW GALLERY ── */
@@ -657,3 +642,142 @@ footer { padding: 60px 40px 40px; text-align: center; border-top: 1px solid var(
 
 
 
+
+/* ═══════════ AURO — تحديث الباقات + تقويم الجوال (2026-09) ═══════════ */
+
+/* شارة «الأكثر طلباً» على الباقة المميزة */
+.pkg-badge {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(135deg, var(--gold-light, #E8C97A), var(--gold));
+  color: #000; font-size: .68rem; font-weight: 700; letter-spacing: 1px;
+  padding: 5px 16px; border-radius: 0 0 10px 10px; white-space: nowrap; z-index: 2;
+}
+
+/* سطر «كل الباقات تشمل» تحت الشبكة */
+.pkg-included {
+  margin: 26px auto 0; max-width: 760px; text-align: center;
+  font-size: .85rem; line-height: 2; color: rgba(255,255,255,.62);
+  border: 1px solid var(--glass-border); border-radius: 14px;
+  padding: 16px 20px; background: rgba(255,255,255,.02);
+}
+.pkg-included span {
+  display: block; color: var(--gold); font-weight: 700;
+  letter-spacing: 2px; font-size: .72rem; margin-bottom: 6px;
+}
+
+/* ── إصلاح اختيار التاريخ في الجوال ──
+   المشكلة: خانة التاريخ كانت نصف عرض الشاشة، والتقويم داخلها يطلع مضغوط.
+   الحل: الحقول عمود واحد بالجوال، والتقويم يصير نافذة بمنتصف الشاشة بأزرار كبيرة. */
+@media (max-width: 767px) {
+  .form-grid-2 { grid-template-columns: 1fr; }
+
+  /* ملاحظة: .form-card فيها backdrop-filter، وهي تمنع position:fixed من التمركز
+     على الشاشة، فنخلي التقويم بعرض الحقل كامل تحته بدل نافذة عائمة. */
+  .auro-calendar {
+    position: absolute; top: calc(100% + 8px);
+    left: -20px; right: -20px; width: auto; max-width: none;
+    transform: none; margin: 0;
+    padding: 14px 12px; border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.85);
+  }
+  .auro-calendar.visible { transform: none; }
+
+  .cal-grid { gap: 4px; }
+  .cal-day {
+    min-height: 44px; padding: 0; font-size: .95rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cal-day-name { font-size: .8rem; padding-bottom: 8px; }
+  .cal-btn { min-width: 44px; min-height: 44px; font-size: 1.3rem; }
+  .cal-month-year { font-size: 1rem; }
+}
+
+/* ── الهيرو: سطر التوضيح والضمان (2026-09) ── */
+#hero .hero-subtitle {
+  margin-bottom: 0; font-size: 1.02rem; line-height: 1.9;
+  color: rgba(255,255,255,.78); max-width: 34ch; margin-inline: auto;
+  letter-spacing: 0;
+}
+.hero-meta {
+  margin: 12px 0 38px; font-size: .82rem; letter-spacing: 1.5px;
+  color: var(--gold); opacity: .9;
+}
+.hero-guarantee {
+  margin-top: 22px; font-size: .85rem; line-height: 1.8;
+  color: rgba(255,255,255,.7); display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid rgba(197,160,89,.28); border-radius: 100px;
+  padding: 8px 20px; background: rgba(197,160,89,.05);
+}
+.hero-guarantee span { color: var(--gold); font-weight: 700; }
+/* الجوال: نضغط ارتفاع الهيرو عشان الزر والضمان يبانون بدون تمرير */
+@media (max-width: 767px) {
+  .hero-logo { width: 120px; margin-bottom: 22px; border-radius: 24px; }
+  .hero-eyebrow { margin-bottom: 20px; font-size: .62rem; letter-spacing: 4px; }
+  #hero .hero-subtitle { font-size: .92rem; line-height: 1.8; max-width: 28ch; }
+  .hero-meta { font-size: .74rem; letter-spacing: 1px; margin: 10px 0 26px; }
+  .hero-guarantee { font-size: .74rem; padding: 7px 14px; margin-top: 14px; margin-bottom: 12px; line-height: 1.6; }
+}
+
+/* خلفية الهيرو في الجوال: نسخة طولية من نفس الصورة عشان الركن يبان كامل */
+@media (max-width: 767px) {
+  #bg-slideshow { background-image: url('hero-real-m.webp'); }
+}
+
+/* ── فيديو خلفية الهيرو (2026-09) ──
+   الصورة تظل خلفه كـ fallback: لو الفيديو ما اشتغل، الصورة تبان زي ما هي. */
+#bg-video {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; opacity: 0; transition: opacity 1.4s ease;
+  pointer-events: none;
+}
+#bg-video.is-ready { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { #bg-video { display: none; } }
+
+/* ── النداء الأخير قبل السياسات (2026-09) ── */
+#final-cta { padding: 40px 0 20px; display: flex; justify-content: center; }
+.cta-panel {
+  width: 100%; max-width: 780px; text-align: center;
+  padding: 56px 40px; border-radius: 28px;
+  border: 1px solid rgba(197,160,89,.28);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(197,160,89,.10) 0%, transparent 65%),
+    rgba(255,255,255,.025);
+  backdrop-filter: blur(18px);
+}
+.cta-title { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 300; margin: 14px 0 12px; line-height: 1.45; }
+.cta-title .text-gold { font-weight: 700; }
+.cta-sub { color: var(--text-muted); font-size: .95rem; line-height: 1.9; max-width: 46ch; margin: 0 auto 32px; }
+.cta-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.cta-actions .btn-outline { display: inline-flex; align-items: center; text-decoration: none; }
+.cta-note { margin-top: 26px; font-size: .8rem; color: rgba(255,255,255,.45); }
+@media (max-width: 767px) {
+  #final-cta { padding: 20px 0 0; }
+  .cta-panel { padding: 40px 22px; border-radius: 22px; }
+  .cta-actions { flex-direction: column; }
+  .cta-actions .btn-primary, .cta-actions .btn-outline { width: 100%; justify-content: center; }
+  .cta-sub { font-size: .88rem; margin-bottom: 26px; }
+}
+
+/* ── إيقاع الحركة (2026-09) ──
+   التفاعل (لمسة/مرور المؤشر) لازم يكون فوري ٢٠٠–٢٥٠ms.
+   الظهور عند التمرير يبقى ناعم زي ما هو. */
+.btn-primary, .btn-outline, .pkg-card, .stat-card,
+.contact-card, .faq-q, .rv-btn, .gallery-item {
+  transition-duration: .22s;
+}
+.pkg-card::before, .btn-primary::before, .gallery-item::after {
+  transition-duration: .25s;
+}
+
+/* ── احترام إعداد «تقليل الحركة» في الجهاز ──
+   بعض المستخدمين يعطّلون الحركة لأسباب صحية. هنا يشوفون المحتوى فوراً بدون أي حركة. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal { opacity: 1 !important; transform: none !important; }
+  #bg-video { display: none; }
+}

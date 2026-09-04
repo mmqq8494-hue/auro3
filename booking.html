@@ -4,14 +4,14 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
-    <title>AURO | احجز ركنك</title>
-    <meta name="description" content="احجز ركن قهوة اورو الفاخر لمناسبتك مع AURO. الدمام، الخبر، والظهران." />
+    <title>AURO | احجزوا ركنكم</title>
+    <meta name="description" content="احجزوا ركن قهوة اورو الفاخر لمناسبتكم مع AURO. الدمام، الخبر، والظهران." />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://auro-ksa.com/booking.html" />
     <meta name="theme-color" content="#C5A059" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="AURO | احجز ركنك" />
-    <meta property="og:description" content="احجز ركن قهوة اورو الفاخر لمناسبتك." />
+    <meta property="og:title" content="AURO | احجزوا ركنكم" />
+    <meta property="og:description" content="احجزوا ركن قهوة اورو الفاخر لمناسبتكم." />
     <meta property="og:image" content="AUROwebsitebg.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/png" href="favicon.png" />
@@ -28,16 +28,16 @@
             }
         </style>
     </noscript>
-    <link rel="preload" as="image" href="AUROwebsitebg.png" />
-    <link rel="preload" as="image" href="logo.png" />
-    <link rel="stylesheet" href="style.css?v=20260805" />
+    <link rel="preload" as="image" href="hero-real.webp" />
+    <link rel="preload" as="image" href="logo.webp" />
+    <link rel="stylesheet" href="style.css?v=20260903" />
 </head>
 
 <body class="booking-page">
 
     <!-- PRELOADER -->
     <div id="preloader">
-        <img src="logo.png" alt="AURO - ركن قهوة اورو" class="preloader-logo" />
+        <img src="logo.webp" alt="AURO - ركن قهوة اورو" class="preloader-logo" width="512" height="512" />
         <div class="preloader-bar">
             <div class="preloader-fill"></div>
         </div>
@@ -47,7 +47,7 @@
     <div id="page-transition">
         <div class="transition-bg"></div>
         <div class="transition-content">
-            <img src="logo.png" alt="AURO" class="transition-logo" />
+            <img src="logo.webp" alt="AURO" class="transition-logo" width="512" height="512" />
             <div class="transition-line"></div>
         </div>
     </div>
@@ -100,46 +100,57 @@
         <section id="step-packages" class="booking-step active-step">
             <div class="section-header reveal visible">
                 <span class="section-tag">خطوة ١ من ٣</span>
-                <h2 class="section-title">اختر <span style="color:var(--gold)">باقتك</span></h2>
-                <p class="section-subtitle">كل باقة صُمِّمت بعناية لتناسب مناسبتك</p>
+                <h2 class="section-title">اختاروا <span style="color:var(--gold)">باقتك</span></h2>
+                <p class="section-subtitle">كل باقة صُمِّمت بعناية لتناسب مناسبتكم</p>
             </div>
             <div class="packages-grid">
-                <div class="pkg-card reveal visible" onclick="selectPkg(this,'الذهبية','20-35',1,450)">
-                    <div class="pkg-icon">☕</div>
-                    <div class="pkg-name">الذهبية</div>
-                    <div class="pkg-cups">20-35 <span>كوب</span></div>
-                    <div class="pkg-price">٤٥٠ <span>ريال</span> <em class="pkg-deposit">+ ٥٠٠ تأمين</em></div>
-                    <div class="pkg-desc">مثالية للجمعات والمناسبات الخاصة</div>
-                    <div class="pkg-features">
-                        <div class="pkg-feature">الركن الخشبي والأكواب</div>
-                        <div class="pkg-feature">ترمس واحد وحافظة ثلج</div>
-                        <div class="pkg-feature">مشروب واحد مختار</div>
-                    </div>
-                </div>
-                <div class="pkg-card featured reveal visible" onclick="selectPkg(this,'البلاتينية','40-70',2,650)">
+                <div class="pkg-card reveal visible" onclick="selectPkg(this,'البلاتينية','40-70',2,650)">
                     <div class="pkg-icon">✨</div>
-                    <div class="pkg-name" style="color:var(--gold)">البلاتينية</div>
+                    <div class="pkg-name">البلاتينية</div>
                     <div class="pkg-cups">40-70 <span>كوب</span></div>
-                    <div class="pkg-price">٦٥٠ <span>ريال</span> <em class="pkg-deposit">+ ٥٠٠ تأمين</em></div>
-                    <div class="pkg-desc">للمناسبات الأنيقة والمتوسطة</div>
+                    <div class="pkg-price">٦٥٠ <span>ريال</span> <em class="pkg-deposit">+ ٥٠٠ تأمين مسترد</em></div>
+                    <div class="pkg-desc">للجمعات العائلية والمناسبات المتوسطة</div>
                     <div class="pkg-features">
-                        <div class="pkg-feature">الركن الخشبي والأكواب</div>
-                        <div class="pkg-feature">ترمسان وحافظة ثلج</div>
-                        <div class="pkg-feature">مشروبان مختاران</div>
+                        <div class="pkg-feature">ترمسان (٥ لتر لكل ترمس)</div>
+                        <div class="pkg-feature">مشروبان من اختيارك</div>
+                        <div class="pkg-feature">٤٠ كوب حار · حتى ٧٠ بارد مع الثلج</div>
+                        <div class="pkg-feature">يكفي ٣٠ إلى ٥٠ ضيف</div>
                     </div>
                 </div>
-                <div class="pkg-card reveal visible" onclick="selectPkg(this,'الملكية','60-100',3,850)">
+                <div class="pkg-card featured reveal visible" onclick="selectPkg(this,'الملكية','60-100',3,850)">
+                    <span class="pkg-badge">الأكثر طلباً</span>
                     <div class="pkg-icon">👑</div>
-                    <div class="pkg-name">الملكية</div>
+                    <div class="pkg-name" style="color:var(--gold)">الملكية</div>
                     <div class="pkg-cups">60-100 <span>كوب</span></div>
-                    <div class="pkg-price">٨٥٠ <span>ريال</span> <em class="pkg-deposit">+ ٥٠٠ تأمين</em></div>
-                    <div class="pkg-desc">لحفلاتكم الكبرى والمناسبات الرسمية</div>
+                    <div class="pkg-price">٨٥٠ <span>ريال</span> <em class="pkg-deposit">+ ٥٠٠ تأمين مسترد</em></div>
+                    <div class="pkg-desc">الأنسب للتخرج والعقيقة والمناسبات الكبيرة</div>
                     <div class="pkg-features">
-                        <div class="pkg-feature">الركن الخشبي والأكواب</div>
-                        <div class="pkg-feature">٣ ترامس وحافظة ثلج</div>
-                        <div class="pkg-feature">ثلاثة مشروبات مختارة</div>
+                        <div class="pkg-feature">٣ ترامس (٥ لتر لكل ترمس)</div>
+                        <div class="pkg-feature">٣ مشروبات من اختيارك</div>
+                        <div class="pkg-feature">٦٠ كوب حار · حتى ١٠٠ بارد مع الثلج</div>
+                        <div class="pkg-feature">يكفي ٥٠ إلى ٨٠ ضيف</div>
                     </div>
                 </div>
+                <div class="pkg-card reveal visible" onclick="selectPkg(this,'الفخامة','80-140',4,1250)">
+                    <div class="pkg-icon">🤍</div>
+                    <div class="pkg-name">الفخامة</div>
+                    <div class="pkg-cups">80-140 <span>كوب</span></div>
+                    <div class="pkg-price">١٬٢٥٠ <span>ريال</span> <em class="pkg-deposit">+ ٥٠٠ تأمين مسترد</em></div>
+                    <div class="pkg-desc">للحفلات الكبرى وفعاليات الشركات</div>
+                    <div class="pkg-features">
+                        <div class="pkg-feature">٤ ترامس (٥ لتر لكل ترمس)</div>
+                        <div class="pkg-feature">٤ مشروبات من اختيارك</div>
+                        <div class="pkg-feature">الزينة والتنسيق مشمولة</div>
+                        <div class="pkg-feature">بطاقة أنيقة باسم المناسبة</div>
+                        <div class="pkg-feature">٨٠ كوب حار · حتى ١٤٠ بارد مع الثلج</div>
+                        <div class="pkg-feature">يكفي ٧٠ إلى ١٠٠ ضيف</div>
+                    </div>
+                </div>
+            </div>
+            <div class="pkg-included">
+                <span>كل الباقات تشمل:</span>
+                الركن الخشبي بإضاءته · الأكواب · حافظة الثلج · التوصيل والتجهيز والاستلام · ٥ ساعات تشغيل
+                <br><small style="opacity:.75">الترمس الواحد يكفي ٢٠ كوب من المشروب الحار، ويصل إلى ٣٥ كوب من البارد — لأن الثلج يأخذ جزءاً من الكوب.</small>
             </div>
         </section>
 
@@ -148,7 +159,7 @@
             <button class="back-btn" onclick="goToStep(1)">→ رجوع للباقات</button>
             <div class="section-header">
                 <span class="section-tag">خطوة ٢ من ٣</span>
-                <h2 class="section-title">اختر <span style="color:var(--gold)">مشروباتك</span></h2>
+                <h2 class="section-title">اختاروا <span style="color:var(--gold)">مشروباتك</span></h2>
                 <p class="drinks-info" id="drinks-info-text"></p>
             </div>
             <div class="thermos-wrapper">
@@ -220,7 +231,7 @@
                         <div class="field" id="f-city" style="margin-bottom:20px">
                             <label><span>*</span> المدينة</label>
                             <select id="inp-city" class="glass-input" required>
-                                <option value="">اختر المدينة</option>
+                                <option value="">اختاروا المدينة</option>
                                 <option>الدمام</option>
                                 <option>الخبر</option>
                                 <option>الظهران</option>
@@ -237,7 +248,7 @@
                             <div class="field" id="f-date">
                                 <label><span>*</span> تاريخ المناسبة</label>
                                 <div class="auro-calendar-container">
-                                    <input type="text" id="inp-date" class="glass-input" placeholder="اختر التاريخ"
+                                    <input type="text" id="inp-date" class="glass-input" placeholder="اختاروا التاريخ"
                                         readonly required />
                                     <div id="auro-calendar" class="auro-calendar"></div>
                                 </div>
@@ -319,9 +330,9 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-client.js?v=20260805"></script>
-    <script src="feedback-service.js?v=20260805"></script>
-    <script src="booking.js?v=20260805"></script>
+    <script src="supabase-client.js?v=20260903"></script>
+    <script src="feedback-service.js?v=20260903"></script>
+    <script src="booking.js?v=20260903"></script>
 </body>
 
 </html>

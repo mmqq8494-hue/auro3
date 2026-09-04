@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AURO | شاركنا تجربتك</title>
-  <link rel="stylesheet" href="style-feedback.css?v=20260805">
+  <title>AURO | شاركونا تجربتكم</title>
+  <link rel="stylesheet" href="style-feedback.css?v=20260903">
   <link rel="icon" type="image/png" href="favicon.png">
   <meta name="robots" content="noindex, nofollow">
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="AURO | شاركنا تجربتك" />
-  <meta property="og:description" content="قيم تجربتك مع ركن قهوة اورو" />
+  <meta property="og:title" content="AURO | شاركونا تجربتكم" />
+  <meta property="og:description" content="قيّموا تجربتكم مع ركن قهوة اورو" />
   <meta property="og:image" content="https://auro-ksa.com/AUROwebsitebg.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -357,7 +357,7 @@
   <div class="orb" style="bottom:-10%;left:-5%;opacity:0.5;animation-delay:-6s;"></div>
 
   <header>
-    <img src="logo.png" alt="AURO Logo" class="logo-small">
+    <img src="logo.webp" alt="AURO Logo" class="logo-small">
   </header>
 
   <main class="feedback-container">
@@ -432,7 +432,7 @@
         <div class="step-icon">⭐</div>
         <span class="step-label">٣ من ٤ · التقييم العام</span>
         <h2>كيف كانت <span class="g">تجربتك</span> مع أورو؟</h2>
-        <p class="muted">اختر عدد النجوم الذي تراه مناسباً</p>
+        <p class="muted">اختاروا عدد النجوم المناسبً</p>
 
         <div class="stars-container" id="star-container" role="group" aria-label="تقييم من خمس نجوم">
           <span class="star" data-value="1">★</span>
@@ -514,7 +514,7 @@
         <!-- ACTION BUTTONS -->
         <div class="card-actions">
           <button class="btn-card-dl" id="dl-btn" onclick="downloadCard()">📷 تحميل</button>
-          <button class="btn-card-share" id="share-btn" onclick="shareCard()">✶ شارك تجربتك</button>
+          <button class="btn-card-share" id="share-btn" onclick="shareCard()">✶ شاركونا تجربتكم</button>
         </div>
         <p class="share-hint">اضغط شارك وانشر بطاقتك مع أصحابك ✶</p>
 
@@ -527,8 +527,8 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-client.js?v=20260805"></script>
-  <script src="feedback-service.js?v=20260805"></script>
+  <script src="supabase-client.js?v=20260903"></script>
+  <script src="feedback-service.js?v=20260903"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script>
     // ── EmailJS INIT ──────────────────────────────────────────
@@ -684,25 +684,15 @@
         message: `الجوال: ${validPhone || '—'}\nالنجوم: ${stars}\nالتعليق: ${comment || '— لم يُكتب تعليق —'}\nالموقع: ${geo ? geo.city + '، ' + geo.country : '—'}\nالجهاز: ${/Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'موبايل 📱' : 'كمبيوتر 💻'}\n\n🔗 مراجعة التقييم: admin.html`,
       }).catch(() => {});
 
-      // ── DISCORD WEBHOOK ──────────────────────────────────────
-      const discordPayload = {
-        embeds: [{
-          title: "⭐ تقييم جديد على AURO",
-          color: selectedRating >= 4 ? 0x00ff00 : (selectedRating === 3 ? 0xffff00 : 0xff0000),
-          fields: [
-            { name: "الاسم", value: name || "عميل مميز", inline: true },
-            { name: "الجوال", value: validPhone || "—", inline: true },
-            { name: "التقييم", value: selectedRating + "/5 " + stars, inline: true },
-            { name: "التعليق", value: comment || "—", inline: false }
-          ],
-          timestamp: new Date().toISOString()
-        }]
-      };
-      fetch("https://discord.com/api/webhooks/1507053229563842674/SOR6LrKOOLi_4LR8T36K-4x1wGPr0hoD6lqcQ5Rt0ibY6yzaJHY-NwYwKfInw4e1jlTT", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(discordPayload)
-      }).catch(() => {});
+      // ── إشعار التقييم عبر ريلاي AURO (رابط Discord محفوظ في السيرفر) ──
+      window.auroNotify('feedback', {
+        name:    name || "عميل مميز",
+        phone:   validPhone || "",
+        rating:  selectedRating,
+        stars:   stars,
+        comment: comment || "",
+        city:    geo ? (geo.city + '، ' + geo.country) : ""
+      });
 
       goStep(5);
       buildCard(name || 'عميل مميز', selectedRating, comment);
@@ -895,7 +885,7 @@
         });
       } catch(e) { /* user cancelled */ }
       finally {
-        btn.textContent = '✶ شارك تجربتك';
+        btn.textContent = '✶ شاركونا تجربتكم';
         btn.disabled = false;
       }
     }

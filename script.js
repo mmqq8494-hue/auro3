@@ -419,39 +419,34 @@ window.addEventListener('scroll', () => {
     }
 }, { passive: true });
 
-// ── REVIEWS CAROUSEL ─────────────────────────────────────────
-// Same mechanism as the 3D gallery below (initCoverFlow): plain CSS
-// `transition` + JS class swap on a currentIndex, driven by clicking a
-// side card or (here) a setInterval tick — no scroll events, no
-// IntersectionObserver, no @keyframes.
+// ── REVIEWS GRID ─────────────────────────────────────────────
+// Every approved review renders at once in a static grid — no timer, no
+// animation-driven cycling, nothing whose visibility depends on timing.
 function loadReviewsTicker() {
-    const stage = document.getElementById('reviews-track');
-    if (!stage) return;
+    const track = document.getElementById('reviews-track');
+    if (!track) return;
 
     if (typeof FeedbackService === 'undefined') { setTimeout(loadReviewsTicker, 150); return; }
     FeedbackService.init();
-
-    if (window._reviewTimer) { clearInterval(window._reviewTimer); window._reviewTimer = null; }
 
     function escHtml(s) {
         return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    const approved  = FeedbackService.getReviews('approved');
+    const approved  = FeedbackService.getReviews('approved').slice(0, 6);
     const emptyWrap = document.getElementById('reviews-empty-wrap');
-    const carousel  = document.getElementById('rv-carousel');
 
-    stage.innerHTML = '';
+    track.innerHTML = '';
 
     if (!approved || !approved.length) {
         if (emptyWrap) emptyWrap.style.display = '';
-        if (carousel)  carousel.style.display = 'none';
+        track.style.display = 'none';
         return;
     }
     if (emptyWrap) emptyWrap.style.display = 'none';
-    if (carousel)  carousel.style.display = '';
+    track.style.display = '';
 
-    const cards = approved.map(r => {
+    approved.forEach(r => {
         const rating = Math.min(5, Math.max(0, parseInt(r.rating) || 5));
         const starsHtml = '★'.repeat(rating) + '☆'.repeat(5 - rating);
         const name = r.name || 'عميل مميز';
@@ -470,44 +465,8 @@ function loadReviewsTicker() {
                     <span class="rv-card__badge">عميل موثّق</span>
                 </div>
             </div>`;
-        stage.appendChild(card);
-        return card;
+        track.appendChild(card);
     });
-
-    const n = cards.length;
-    let currentIndex = 0;
-
-    function updateCarousel() {
-        cards.forEach((card, i) => {
-            let dist = i - currentIndex;
-            if (dist > n / 2) dist -= n;
-            if (dist < -n / 2) dist += n;
-
-            card.className = 'rv-card';
-            if (dist === 0) card.classList.add('is-center');
-            else if (dist === 1) card.classList.add('is-right-1');
-            else if (dist === -1) card.classList.add('is-left-1');
-            else card.classList.add('is-hidden');
-        });
-    }
-
-    function nextCard() { currentIndex = (currentIndex + 1) % n; updateCarousel(); }
-
-    cards.forEach((c, i) => {
-        c.addEventListener('click', () => {
-            if (!c.classList.contains('is-center')) {
-                currentIndex = i;
-                updateCarousel();
-            }
-        });
-    });
-
-    updateCarousel();
-
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (n > 1 && !reducedMotion) {
-        window._reviewTimer = setInterval(nextCard, 4000);
-    }
 }
 
 if (document.readyState === 'loading') {
@@ -578,3 +537,26 @@ if (document.readyState === 'loading') {
 }
 
 
+
+
+// ── HERO BACKGROUND VIDEO ─────────────────────────────────────
+// فيديو خفيف (~180KB) يشتغل خلف الهيرو. لو فشل أو المستخدم مقلل الحركة،
+// تبقى صورة الخلفية زي ما هي بدون أي أثر على الصفحة.
+(function initHeroVideo() {
+    const v = document.getElementById('bg-video');
+    if (!v) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    // نتجنب التحميل على اتصال ضعيف أو وضع توفير البيانات
+    const c = navigator.connection;
+    if (c && (c.saveData || /2g/.test(c.effectiveType || ''))) return;
+
+    v.src = window.matchMedia('(max-width: 767px)').matches ? 'hero-m.mp4' : 'hero-d.mp4';
+    v.preload = 'auto';
+    v.addEventListener('canplay', () => v.classList.add('is-ready'), { once: true });
+    v.addEventListener('error', () => v.remove(), { once: true });
+
+    const start = () => { const p = v.play(); if (p) p.catch(() => v.remove()); };
+    if (document.readyState === 'complete') start();
+    else window.addEventListener('load', start, { once: true });
+})();

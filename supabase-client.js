@@ -28,3 +28,22 @@ window.camelToSnake = function (obj) {
   }
   return out;
 };
+
+// ── AURO RELAY (Apps Script) ──────────────────────────────────────
+// كل الإشعارات تمر من هنا بدل ما تنادي Discord مباشرة من المتصفح،
+// عشان رابط الـ webhook ما يكون مكشوف في كود الموقع.
+// رابط الـ Web app حق Apps Script (Deploy > Web app). لو أعدت النشر بنسخة جديدة يبقى نفسه.
+window.AURO_RELAY = 'https://script.google.com/macros/s/AKfycbz8pFm7NIYpEZ3qE3wVVtQZaaajpTIIAEA2xXMaP5qwQ_fZ9A5PKFhApaLi1CfXCBT2/exec';
+
+// إرسال بأفضل جهد — ما يوقف ولا يعطّل أي شي لو فشل أو لو الرابط ما انحط.
+window.auroNotify = function (type, data) {
+  try {
+    if (!window.AURO_RELAY || window.AURO_RELAY.indexOf('http') !== 0) return Promise.resolve();
+    return fetch(window.AURO_RELAY, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(Object.assign({ kind: type }, data || {}))
+    }).catch(() => {});
+  } catch (e) { return Promise.resolve(); }
+};

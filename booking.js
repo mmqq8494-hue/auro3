@@ -17,7 +17,7 @@ if (!sessionStorage.getItem('auro_preloaded')) {
 
 // ── MAIN BACKGROUND ────────────────────────────────────────────
 const bgEl = document.getElementById('bg-slideshow');
-if (bgEl) bgEl.style.backgroundImage = "url('AUROwebsitebg.png')";
+if (bgEl) bgEl.style.backgroundImage = "url('hero-real.webp')";
 
 // ── PARTICLES ────────────────────────────────────────────────
 function spawnParticles(x, y, count = 6) {
@@ -91,7 +91,11 @@ class AuroDatePicker {
         this.input.addEventListener('click', (e) => {
             e.stopPropagation();
             this.container.classList.toggle('visible');
-            if (this.container.classList.contains('visible')) this.render();
+            if (this.container.classList.contains('visible')) {
+                this.render();
+                // خلّي التقويم كامل داخل الشاشة بالجوال
+                setTimeout(() => this.container.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60);
+            }
         });
 
         document.addEventListener('click', (e) => {
@@ -241,7 +245,7 @@ function goToStep(step) {
     if (step === 1) {
         showStep(1);
     } else if (step === 2) {
-        if (!booking.pkg) { toast('اختر باقة أولاً', 'error'); return; }
+        if (!booking.pkg) { toast('اختاروا الباقة أولاً', 'error'); return; }
         showStep(2);
     } else if (step === 3) {
         if (booking.thermoses.some(t => !t.drink)) {
@@ -268,7 +272,7 @@ function selectPkg(card, name, cups, limit, price) {
     renderThermoses();
 
     document.getElementById('drinks-info-text').textContent =
-        `باقة ${name} (${price} ريال) – اختر ${limit} ${limit === 1 ? 'مشروب' : 'مشروبات'} بتعبئة الترامس أدناه:`;
+        `باقة ${name} (${price} ريال) – اختاروا ${limit} ${limit === 1 ? 'مشروب' : 'مشروبات'} بتعبئة الترامس أدناه:`;
 
     toast(`تم اختيار باقة ${name} ✨`, 'success');
 
@@ -414,7 +418,7 @@ document.getElementById('auroForm').addEventListener('submit', async e => {
 
     const honeypot = document.getElementById('inp-honeypot');
     if (honeypot && honeypot.value.trim() !== '') {
-        toast('تم إرسال طلبك بنجاح! سيتواصل معك فريقنا 🎉', 'success');
+        toast('تم إرسال طلبكم بنجاح! سيتواصل معكم فريقنا 🎉', 'success');
         clearSaved();
         setTimeout(() => window.location.href = 'index.html', 2000);
         return;
@@ -445,8 +449,6 @@ document.getElementById('auroForm').addEventListener('submit', async e => {
     
     const finalPrice = booking.price + additionsPrice;
     const additionsStr = additionsArr.join('، ');
-
-    const WEBHOOK = 'https://discord.com/api/webhooks/1466534582286291117/aVV9y5qUHQ3eCAi9hC52bfTNC4csvz-1mPJ7D_IVcJtYZIphv94GJOZBRs2ZvtuOt3BG';
 
     const drinks = booking.thermoses.map(t => t.drink).filter(d => d);
 
@@ -484,35 +486,29 @@ document.getElementById('auroForm').addEventListener('submit', async e => {
             alert("خطأ: تعذر الاتصال بقاعدة البيانات. تأكد من جودة اتصالك بالإنترنت.");
         }
 
-        // Best-effort Discord notification — must never block/skip the booking save above.
+        // Best-effort notification + sheet logging through the AURO relay (Apps Script).
+        // The Discord webhook URL lives on the server side, never in this file.
         try {
-            await fetch(WEBHOOK, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    embeds: [{
-                        title: '🛎️ طلب حجز AURO جديد',
-                        color: 12951641,
-                        fields: [
-                            { name: '👤 العميل', value: d.name, inline: true },
-                            { name: '📱 الجوال', value: d.phone, inline: true },
-                            { name: '📦 الباقة', value: `${booking.pkg} - ${booking.cups} كوب (${finalPrice} ريال)`, inline: true },
-                            { name: '☕ المشروبات', value: drinks.join(' + ') || 'لم يحدد' },
-                            { name: '✨ الإضافات', value: additionsStr || 'لا يوجد', inline: true },
-                            { name: '📍 المدينة', value: d.city, inline: true },
-                            { name: '🎉 المناسبة', value: d.event, inline: true },
-                            { name: '📅 الموعد', value: `${d.date} | ${d.time}` },
-                            { name: '📝 ملاحظات', value: d.notes || 'لا يوجد' }
-                        ],
-                        timestamp: new Date().toISOString()
-                    }]
-                })
+            await window.auroNotify('booking', {
+                name:      d.name,
+                phone:     d.phone,
+                city:      d.city,
+                occasion:  d.event,
+                eventDate: d.date,
+                time:      d.time,
+                guests:    booking.cups,
+                package:   booking.pkg,
+                price:     finalPrice,
+                additions: additionsStr,
+                drinks:    drinks.join(' + '),
+                notes:     d.notes || '',
+                source:    'الموقع'
             });
-        } catch (webhookErr) {
-            console.error('Discord webhook failed (non-critical, booking already saved):', webhookErr);
+        } catch (relayErr) {
+            console.error('AURO relay failed (non-critical, booking already saved):', relayErr);
         }
 
-        toast('تم إرسال طلبك بنجاح! سيتواصل معك فريقنا 🎉', 'success');
+        toast('تم إرسال طلبكم بنجاح! سيتواصل معكم فريقنا 🎉', 'success');
 
         clearSaved();
 
@@ -525,7 +521,7 @@ document.getElementById('auroForm').addEventListener('submit', async e => {
                 <div style="font-size: 4rem; margin-bottom: 20px; animation: pop 0.6s cubic-bezier(.4,0,.2,1);">✨</div>
                 <h2 style="color: var(--gold); margin-bottom: 15px; font-family: 'Outfit', 'Tajawal', sans-serif;">شكراً لك ${d.name}!</h2>
                 <p style="color: var(--text-muted); line-height: 1.8; margin-bottom: 30px;">
-                    لقد استلمنا طلبك بنجاح. نحن سعداء جداً ومتحمسون لنكون جزءاً من مناسبتك السعيدة.<br><br>
+                    لقد استلمنا طلبكم بنجاح. نحن سعداء جداً ومتحمسون لنكون جزءاً من مناسبتكم السعيدة.<br><br>
                     سيتم تحويلك الآن إلى واتساب للتواصل المباشر مع فريقنا لتأكيد التفاصيل وإتمام الحجز.
                 </p>
                 <div style="font-size: 0.9rem; color: var(--gold-light);">جاري التحويل... ⏳</div>
@@ -562,7 +558,7 @@ function restoreBooking() {
             if (currentStep >= 2) {
                 renderThermoses();
                 document.getElementById('drinks-info-text').textContent =
-                    `باقة ${booking.pkg} (${booking.price} ريال) – اختر ${booking.limit} ${booking.limit === 1 ? 'مشروب' : 'مشروبات'} بتعبئة الترامس أدناه:`;
+                    `باقة ${booking.pkg} (${booking.price} ريال) – اختاروا ${booking.limit} ${booking.limit === 1 ? 'مشروب' : 'مشروبات'} بتعبئة الترامس أدناه:`;
             }
             if (currentStep >= 3) updateSummary();
 
@@ -583,9 +579,11 @@ function restoreBooking() {
     const pkgParam = params.get('pkg');
     if (pkgParam) {
         const pkgMap = {
-            gold: { name: 'الذهبية', cups: '20-35', limit: 1, price: 450 },
             platinum: { name: 'البلاتينية', cups: '40-70', limit: 2, price: 650 },
-            royal: { name: 'الملكية', cups: '60-100', limit: 3, price: 850 }
+            royal: { name: 'الملكية', cups: '60-100', limit: 3, price: 850 },
+            luxe: { name: 'الفخامة', cups: '80-140', limit: 4, price: 1250 },
+            // الذهبية: ما عادت معروضة بالموقع — تبقى هنا عشان أي رابط قديم يشتغل
+            gold: { name: 'الذهبية', cups: '20-35', limit: 1, price: 450 }
         };
         const pkg = pkgMap[pkgParam];
         if (pkg) {
@@ -597,7 +595,7 @@ function restoreBooking() {
             });
             renderThermoses();
             document.getElementById('drinks-info-text').textContent =
-                `باقة ${pkg.name} (${pkg.price} ريال) – اختر ${pkg.limit} ${pkg.limit === 1 ? 'مشروب' : 'مشروبات'} بتعبئة الترامس أدناه:`;
+                `باقة ${pkg.name} (${pkg.price} ريال) – اختاروا ${pkg.limit} ${pkg.limit === 1 ? 'مشروب' : 'مشروبات'} بتعبئة الترامس أدناه:`;
             showStep(2);
             toast(`تم اختيار باقة ${pkg.name} ✨`, 'success');
             return;
