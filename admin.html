@@ -518,7 +518,7 @@
             <div class="form-group hidden" id="inv-corner-custom-wrap"><label>اسم الباقة المخصصة</label><input type="text" id="inv-corner-custom" class="form-control" placeholder="مثال: ركن قهوة خاص"></div>
             <div class="form-row">
               <div class="form-group"><label>عدد الضيوف</label><input type="number" id="inv-guests" class="form-control" placeholder="العدد المتوقع"></div>
-              <div class="form-group"><label>مدة التشغيل</label><input type="text" id="inv-duration" class="form-control" placeholder="مثال: 5 ساعات"></div>
+              <div class="form-group"><label>مدة بقاء الركن</label><input type="text" id="inv-duration" class="form-control" placeholder="مثال: 5 ساعات"></div>
             </div>
             <div class="form-group">
               <label>إضافات اختيارية</label>
@@ -604,7 +604,7 @@
             </div>
             <div class="form-group hidden" id="contract-corner-custom-wrap"><label>اسم الباقة المخصصة</label><input type="text" id="contract-corner-custom" class="form-control" placeholder="مثال: ركن قهوة خاص"></div>
             <div class="form-row">
-              <div class="form-group"><label>مدة التشغيل</label><input type="text" id="contract-duration" class="form-control" placeholder="مثال: 4 ساعات"></div>
+              <div class="form-group"><label>مدة بقاء الركن</label><input type="text" id="contract-duration" class="form-control" placeholder="مثال: 4 ساعات"></div>
             </div>
             <div class="form-group">
               <label>إضافات اختيارية</label>
@@ -1105,7 +1105,7 @@
           `;
         } else if(b.status === 'paid') {
           actionButtons = `
-            <button class="btn-approve" style="background:#198754;" onclick="issueInvoiceForBooking('${b.id}', 'final')">فاتورة ضريبية نهائية 🧾</button>
+            <button class="btn-approve" style="background:#198754;" onclick="issueInvoiceForBooking('${b.id}', 'final')">فاتورة نهائية 🧾</button>
             <button class="btn-approve" style="background:#fd7e14;" onclick="issueFormForBooking('${b.id}')">استمارة تسليم 📦</button>
             <button class="btn-reject" style="margin-top:4px" onclick="updateBooking('${b.id}','accepted')">تراجع للقبول المبدئي ⏪</button>
           `;

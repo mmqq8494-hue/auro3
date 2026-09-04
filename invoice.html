@@ -238,6 +238,9 @@
         <li>أي تلف أو فقدان بالمعدات والعهدة قد يؤدي إلى خصم مباشر من مبلغ التأمين.</li>
         <li>يخضع الحجز لبنود العقد والشروط والأحكام الخاصة بالمشروع (AURO).</li>
       </ul>
+      <div id="view-tax-note" style="margin-top:15px; padding-top:15px; border-top:1px dashed rgba(255,255,255,0.1); font-size:.78rem; line-height:1.9; opacity:.7;">
+        مشروع AURO غير مسجّل في ضريبة القيمة المضافة، ولا يُحصّل أي ضريبة على هذه الخدمة. هذه الفاتورة ليست فاتورة ضريبية.
+      </div>
       <div id="view-notes-container" style="display:none; margin-top:15px; padding-top:15px; border-top:1px dashed rgba(255,255,255,0.1);">
         <strong style="color:var(--gold);">ملاحظات:</strong> <span id="view-notes"></span>
       </div>
@@ -299,7 +302,7 @@
       document.getElementById('invoice-content').style.display = 'block';
 
       const isQuote = data.type === 'quote';
-      document.getElementById('view-title').textContent = isQuote ? 'عرض سعر' : 'فاتورة ضريبية / نهائية';
+      document.getElementById('view-title').textContent = isQuote ? 'عرض سعر' : 'فاتورة نهائية';
       document.getElementById('view-id').textContent = 'AU-INV-' + (data.invoiceNumber || '00000');
       document.getElementById('view-date').textContent = new Date(data.createdAt || Date.now()).toLocaleDateString('ar-SA');
       
